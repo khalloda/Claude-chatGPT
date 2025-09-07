@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Validator;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Make;
@@ -51,11 +52,20 @@ final class ProductsController extends Controller
         require_auth();
         if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/products'); }
 
-        $data = $this->readForm();
-        if ($data['name']==='' || $data['code']==='') { flash_set('error','Code and name are required.'); redirect('/products/create'); }
+        // Use new validation framework
+        $validation = Validator::validateProduct($_POST);
+        
+        if ($validation->hasErrors()) {
+            $errorMessage = $validation->getFirstErrorMessage();
+            flash_set('error', $errorMessage);
+            redirect('/products/create');
+            return;
+        }
 
         try {
-            $id = Product::create($data);
+            // Use validated and cleaned data
+            $cleanData = $validation->getValidatedData();
+            $id = Product::create($cleanData);
             flash_set('success','Product created.');
             redirect('/products/stock?id='.$id);
         } catch (\Throwable $e) {
