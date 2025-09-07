@@ -6,7 +6,7 @@ abstract class Controller
 {
     protected function view(string $view, array $params = []): void
     {
-        extract($params, EXTR_OVERWRITE);
+        extract($params, EXTR_SKIP);
 
         $content = $this->render($view, $params);
 
@@ -27,7 +27,7 @@ protected function view_raw(string $view, array $params = []): void
 
     protected function render(string $view, array $params = []): string
     {
-        extract($params, EXTR_OVERWRITE);
+        extract($params, EXTR_SKIP);
         ob_start();
         include __DIR__ . '/../views/' . $view . '.php';
         return (string) ob_get_clean();
