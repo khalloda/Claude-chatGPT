@@ -25,3 +25,4 @@ Add your frequently used commands here so Claude can run them when needed:
 ## Notes
 - Recent changes in purchaseinvoicescontroller.php and public/index.php
 - always check PRD.md, Plan.md, Tasks.md, COMPREHENSIVE_PROJECT_ANALYSIS.md, and PROJECT_MEMORY.md before continuing
+- Always start a new branch for each task
