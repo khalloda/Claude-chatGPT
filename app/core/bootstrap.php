@@ -18,12 +18,18 @@ require __DIR__ . '/helpers.php';
 require __DIR__ . '/flash.php';
 
 use App\Core\Env;
+use App\Core\Logger;
+use App\Core\ErrorHandler;
+
+// Initialize logging system
+Logger::init();
+
+// Initialize error handling system
+ErrorHandler::init();
 
 // timezone & error display from .env
 date_default_timezone_set(Env::get('APP_TIMEZONE', 'UTC'));
 $debug = Env::get('APP_DEBUG', 'false') === 'true';
-ini_set('display_errors', $debug ? '1' : '0');
-error_reporting(E_ALL);
 
 // secure session
 if (session_status() !== PHP_SESSION_ACTIVE) {

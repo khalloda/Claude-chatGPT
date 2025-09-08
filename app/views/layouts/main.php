@@ -29,6 +29,7 @@ $u = function (string $path): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<?= htmlspecialchars(\App\Core\csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
 
   <title><?= $h($page_title) ?></title>
   <link rel="icon" href="/assets/images/favicon.ico">
@@ -68,6 +69,25 @@ $u = function (string $path): string {
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
   <script src="/assets/js/app.js" defer></script>
   <script src="/assets/js/tablekit.js" defer></script>
+  
+  <script>
+    // Initialize automatic CSRF token refresh for long-running sessions
+    document.addEventListener('DOMContentLoaded', function() {
+      // Refresh CSRF token every 90 minutes (1.5 hours)
+      setInterval(() => {
+        if (typeof App !== 'undefined' && App.refreshCsrfToken) {
+          App.refreshCsrfToken();
+        }
+      }, 90 * 60 * 1000); // 90 minutes
+      
+      // Also refresh when the page becomes visible after being hidden (tab switching)
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && typeof App !== 'undefined' && App.refreshCsrfToken) {
+          App.refreshCsrfToken();
+        }
+      });
+    });
+  </script>
 
   <!-- Page-specific head scripts hook (optional) -->
   <?= $head_scripts ?? '' ?>

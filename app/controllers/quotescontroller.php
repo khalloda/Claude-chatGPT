@@ -11,7 +11,7 @@ use App\Services\DocNumbers;
 use PDO;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -48,7 +48,7 @@ final class QuotesController extends Controller
     /** POST /quotes — allocate number now, then insert */
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
 
         $pdo = DB::conn();
 
@@ -142,7 +142,7 @@ final class QuotesController extends Controller
     /** POST /quotes/marksent — draft → sent */
     public function marksent(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
 
         $id = (int)($_POST['id'] ?? 0);
         $q  = Quote::find($id);
@@ -161,7 +161,7 @@ final class QuotesController extends Controller
     /** POST /quotes/createorder — Q→SO */
 public function createorder(): void {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
 
     // Accept both names in case the view posts either one
     $quoteId = (int)($_POST['quote_id'] ?? $_POST['id'] ?? $_GET['id'] ?? 0);
@@ -239,7 +239,7 @@ public function createorder(): void {
     /** POST /quotes/cancel */
     public function cancel(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
         $id = (int)($_POST['id'] ?? 0);
         $q  = Quote::find($id);
         if (!$q) { flash_set('error','Quote not found.'); redirect('/quotes'); }
@@ -255,7 +255,7 @@ public function createorder(): void {
     /** POST /quotes/markexpired */
     public function markexpired(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
         $id = (int)($_POST['id'] ?? 0);
         $q  = Quote::find($id);
         if (!$q) { flash_set('error','Quote not found.'); redirect('/quotes'); }

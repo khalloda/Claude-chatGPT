@@ -6,7 +6,7 @@ use App\Core\DB;
 use App\Models\Warehouse;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -38,7 +38,7 @@ final class WarehousesController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
         $code = trim((string)($_POST['code'] ?? ''));
         $name = trim((string)($_POST['name'] ?? ''));
         $loc  = trim((string)($_POST['location'] ?? ''));
@@ -63,7 +63,7 @@ final class WarehousesController extends Controller
 
     public function update(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
         $id=(int)($_POST['id']??0);
         $code=trim((string)($_POST['code']??'')); $name=trim((string)($_POST['name']??'')); $loc=trim((string)($_POST['location']??''));
         if($id<=0||$code===''||$name===''){ flash_set('error','Invalid form data.'); redirect('/warehouses'); }
@@ -74,7 +74,7 @@ final class WarehousesController extends Controller
 
     public function destroy(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/warehouses'); }
         $id=(int)($_POST['id']??0);
         if($id<=0){ flash_set('error','Invalid id.'); redirect('/warehouses'); }
         if(!Warehouse::delete($id)){ flash_set('error','Cannot delete: stock exists.'); }

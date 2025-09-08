@@ -11,7 +11,7 @@ use App\Models\VehicleModel;
 use App\Models\Warehouse;
 use App\Models\Note;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -50,7 +50,7 @@ final class ProductsController extends Controller
     public function store(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/products'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/products'); }
 
         // Use new validation framework
         $validation = Validator::validateProduct($_POST);
@@ -99,7 +99,7 @@ $this->view('products/form', [
     public function update(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/products'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/products'); }
         $id=(int)($_POST['id']??0);
         $data = $this->readForm();
         if($id<=0){ flash_set('error','Invalid id.'); redirect('/products'); }
@@ -113,7 +113,7 @@ $this->view('products/form', [
     public function destroy(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/products'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/products'); }
         $id=(int)($_POST['id']??0);
         if($id<=0){ flash_set('error','Invalid id.'); redirect('/products'); }
         try { Product::delete($id); flash_set('success','Product deleted.'); }
@@ -134,7 +134,7 @@ $this->view('products/form', [
     public function savestock(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/products'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/products'); }
         $id=(int)($_POST['id']??0);
         if($id<=0){ flash_set('error','Invalid product id.'); redirect('/products'); }
 

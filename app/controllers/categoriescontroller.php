@@ -6,7 +6,7 @@ use App\Core\Controller;
 use App\Models\Category;
 use App\Models\Note;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -29,7 +29,7 @@ final class CategoriesController extends Controller
     public function store(): void
     {
         require_auth();
-        if (!verify_csrf_post()) {
+        if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
             redirect('/categories');
         }
@@ -74,7 +74,7 @@ final class CategoriesController extends Controller
     public function update(): void
     {
         require_auth();
-        if (!verify_csrf_post()) {
+        if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
             redirect('/categories');
         }
@@ -102,7 +102,7 @@ final class CategoriesController extends Controller
     public function destroy(): void
     {
         require_auth();
-        if (!verify_csrf_post()) {
+        if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
             redirect('/categories');
         }

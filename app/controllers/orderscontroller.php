@@ -12,7 +12,7 @@ use PDO;
 use function App\Core\require_auth;
 use function App\Core\redirect;
 use function App\Core\flash_set;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 
 final class OrdersController extends Controller
 {
@@ -34,7 +34,7 @@ final class OrdersController extends Controller
   /** Optional: direct SO creation (allocate number on save) */
   public function store(): void {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/orders'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/orders'); }
 
     $customerId = (int)($_POST['customer_id'] ?? 0);
     $taxRate    = (float)($_POST['tax_rate'] ?? 0);
@@ -71,7 +71,7 @@ final class OrdersController extends Controller
   /** POST /orders/createfromquote — mirror Q→SO with suffix fallback */
   public function createfromquote(): void {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
 
     $qid = (int)($_POST['quote_id'] ?? 0);
     $q = Quote::find($qid);

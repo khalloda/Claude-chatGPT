@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Make;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -27,7 +27,7 @@ final class MakesController extends Controller
     public function store(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
         $name = trim((string)($_POST['name'] ?? ''));
         $slug = trim((string)($_POST['slug'] ?? ''));
         if ($name === '' || $slug === '') { flash_set('error', 'Name and slug are required.'); redirect('/makes/create'); }
@@ -49,7 +49,7 @@ final class MakesController extends Controller
     public function update(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
         $id = (int)($_POST['id'] ?? 0);
         $name = trim((string)($_POST['name'] ?? ''));
         $slug = trim((string)($_POST['slug'] ?? ''));
@@ -63,7 +63,7 @@ final class MakesController extends Controller
     public function destroy(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/makes'); }
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { flash_set('error', 'Invalid id.'); redirect('/makes'); }
 

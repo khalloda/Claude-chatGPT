@@ -10,7 +10,7 @@ use App\Models\Note;
 use PDO;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -58,7 +58,7 @@ final class PurchaseInvoicesController extends Controller
      */
     public function createfrompo(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
 
         $poId = (int)($_POST['purchase_order_id'] ?? 0);
         $po = PurchaseOrder::find($poId);
@@ -113,7 +113,7 @@ final class PurchaseInvoicesController extends Controller
     public function receive(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
 
         $piId = (int)($_POST['id'] ?? 0);
         $pi   = PurchaseInvoice::find($piId);

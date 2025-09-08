@@ -10,7 +10,7 @@ use App\Models\Note;
 use PDO;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -63,7 +63,7 @@ final class InvoicesController extends Controller
     /** Manual create (optional) */
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
 
         $pdo = DB::conn();
         $pdo->beginTransaction();
@@ -118,7 +118,7 @@ final class InvoicesController extends Controller
     /** SO → Invoice */
     public function createfromso(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/orders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/orders'); }
 
         $soId = 0;
         foreach (['sales_order_id','order_id','so_id','id'] as $k) {
@@ -175,7 +175,7 @@ final class InvoicesController extends Controller
     /** --- NEW: add a payment to an invoice --- */
     public function addpayment(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
 
         $invoiceId = (int)($_POST['invoice_id'] ?? 0);
         $amount    = (float)($_POST['amount'] ?? 0);
@@ -207,7 +207,7 @@ final class InvoicesController extends Controller
     /** --- NEW: delete a payment --- */
     public function deletepayment(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
         $invoiceId = (int)($_POST['invoice_id'] ?? 0);
         $paymentId = (int)($_POST['payment_id'] ?? 0);
         if ($invoiceId<=0 || $paymentId<=0) { redirect('/invoices'); }

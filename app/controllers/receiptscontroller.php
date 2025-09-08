@@ -6,7 +6,7 @@ use App\Core\DB;
 use App\Models\PurchaseInvoice;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -15,7 +15,7 @@ final class ReceiptsController extends Controller
     /** Receive multiple lines for a Purchase Invoice (caps to remaining; increments stock; updates avg_cost; writes ledger) */
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
 
         $piId = (int)($_POST['invoice_id'] ?? 0);
         $pi = PurchaseInvoice::find($piId);
@@ -133,7 +133,7 @@ final class ReceiptsController extends Controller
     /** Optional: delete a receipt line and decrement stock (logs a valued adjustment in ledger; avg_cost unchanged) */
     public function destroy(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
 
         $id = (int)($_POST['id'] ?? 0);
         $piId = (int)($_POST['invoice_id'] ?? 0);

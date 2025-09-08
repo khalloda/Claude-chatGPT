@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Note;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -14,7 +14,7 @@ final class NotesController extends Controller
     public function store(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/'); }
 
         $entityType = (string)($_POST['entity_type'] ?? '');
         $entityId   = (int)($_POST['entity_id'] ?? 0);
@@ -52,7 +52,7 @@ final class NotesController extends Controller
     public function destroy(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/'); }
 
         $id = (int)($_POST['id'] ?? 0);
         $returnTo = (string)($_POST['_return'] ?? '/');
@@ -66,7 +66,7 @@ final class NotesController extends Controller
 	public function update(): void
 {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/'); }
 
     $id       = (int)($_POST['id'] ?? 0);
     $body     = trim((string)($_POST['body'] ?? ''));

@@ -6,7 +6,7 @@ use App\Core\Controller;
 use App\Models\VehicleModel;
 use App\Models\Make;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -31,7 +31,7 @@ final class ModelsController extends Controller
     public function store(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
 
         $makeId = (int)($_POST['make_id'] ?? 0);
         $name   = trim((string)($_POST['name'] ?? ''));
@@ -61,7 +61,7 @@ final class ModelsController extends Controller
     public function update(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
 
         $id     = (int)($_POST['id'] ?? 0);
         $makeId = (int)($_POST['make_id'] ?? 0);
@@ -82,7 +82,7 @@ final class ModelsController extends Controller
     public function destroy(): void
     {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
+        if (!verify_csrf_request()) { flash_set('error', 'Invalid session.'); redirect('/models'); }
 
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { flash_set('error', 'Invalid id.'); redirect('/models'); }

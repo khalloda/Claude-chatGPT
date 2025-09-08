@@ -7,7 +7,7 @@ use App\Core\DB;
 use App\Models\Customer;
 use App\Models\Note;
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -25,7 +25,7 @@ final class CustomersController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/customers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/customers'); }
         $d = $this->r();
         if ($d['name']===''){ flash_set('error','Name is required.'); redirect('/customers/create'); }
         Customer::create($d);
@@ -43,7 +43,7 @@ final class CustomersController extends Controller
 
     public function update(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/customers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/customers'); }
         $id=(int)($_POST['id']??0);
         $d = $this->r();
         if($id<=0){ flash_set('error','Bad id.'); redirect('/customers'); }
@@ -54,7 +54,7 @@ final class CustomersController extends Controller
 
     public function destroy(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/customers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/customers'); }
         $id=(int)($_POST['id']??0);
         if($id<=0){ flash_set('error','Bad id.'); redirect('/customers'); }
         if(!Customer::delete($id)){ flash_set('error','Cannot delete: has quotes.'); }

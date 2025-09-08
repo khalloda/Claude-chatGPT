@@ -5,7 +5,7 @@ use App\Core\Controller;
 use App\Models\Supplier;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -24,7 +24,7 @@ final class SuppliersController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
         $d = [
             'name' => trim((string)($_POST['name'] ?? '')),
             'phone' => trim((string)($_POST['phone'] ?? '')),
@@ -47,7 +47,7 @@ final class SuppliersController extends Controller
 
     public function update(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
         $id = (int)($_POST['id'] ?? 0);
         $it = Supplier::find($id);
         if (!$it) { flash_set('error','Not found.'); redirect('/suppliers'); }
@@ -65,7 +65,7 @@ final class SuppliersController extends Controller
 
     public function destroy(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/suppliers'); }
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) { Supplier::delete($id); flash_set('success','Supplier deleted.'); }
         redirect('/suppliers');

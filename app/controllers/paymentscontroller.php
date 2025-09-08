@@ -5,7 +5,7 @@ use App\Core\Controller;
 use App\Models\Invoice;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 use App\Core\DB;
@@ -14,7 +14,7 @@ final class PaymentsController extends Controller
 {
     public function store(): void {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
 
     $invoiceId = (int)($_POST['invoice_id'] ?? 0);
     $amount    = (float)($_POST['amount'] ?? 0);
@@ -105,7 +105,7 @@ public function create(): void
 }
 	public function destroy(): void {
     require_auth();
-    if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+    if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
 
     $id        = (int)($_POST['id'] ?? 0);
     $invoiceId = (int)($_POST['invoice_id'] ?? 0);

@@ -6,7 +6,7 @@ use App\Core\DB;
 use PDO;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -37,7 +37,7 @@ final class TransfersController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/transfers'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/transfers'); }
 
         $from = (int)($_POST['from_warehouse_id'] ?? 0);
         $to   = (int)($_POST['to_warehouse_id'] ?? 0);

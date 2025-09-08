@@ -6,7 +6,7 @@ use App\Core\DB;
 use PDO;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -33,7 +33,7 @@ final class AdjustmentsController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/adjustments'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/adjustments'); }
 
         $wid   = (int)($_POST['warehouse_id'] ?? 0);
         $reason= $_POST['reason'] ?? 'count';

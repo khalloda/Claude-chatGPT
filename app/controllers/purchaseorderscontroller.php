@@ -10,7 +10,7 @@ use App\Models\Note;
 use App\Services\DocNumbers;
 
 use function App\Core\require_auth;
-use function App\Core\verify_csrf_post;
+use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
 use function App\Core\redirect;
 
@@ -52,7 +52,7 @@ final class PurchaseOrdersController extends Controller
 
     public function store(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
 
         try {
             // Allocate new number (atomic, separate from our tx)
@@ -136,7 +136,7 @@ final class PurchaseOrdersController extends Controller
 
     public function update(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
 
         $id = (int)($_POST['id'] ?? 0);
         $po = PurchaseOrder::find($id);
@@ -214,7 +214,7 @@ final class PurchaseOrdersController extends Controller
 
     public function markordered(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
         $id = (int)($_POST['id'] ?? 0);
         $po = PurchaseOrder::find($id);
         if (!$po) { flash_set('error','Not found.'); redirect('/purchaseorders'); }
@@ -261,7 +261,7 @@ final class PurchaseOrdersController extends Controller
 
     public function markclosed(): void {
         require_auth();
-        if (!verify_csrf_post()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
         $id = (int)($_POST['id'] ?? 0);
         $po = PurchaseOrder::find($id);
         if (!$po) { flash_set('error','Not found.'); redirect('/purchaseorders'); }

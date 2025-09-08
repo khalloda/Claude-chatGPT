@@ -13,6 +13,19 @@ $router->get('/health', function () {
     echo 'OK';
 });
 
+// CSRF token refresh endpoint
+$router->get('/csrf-refresh', function () {
+    if (!isset($_SESSION)) {
+        session_start();
+    }
+    
+    \App\Core\refresh_csrf_if_needed();
+    $newToken = \App\Core\regenerate_csrf_token();
+    
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['token' => $newToken], JSON_UNESCAPED_UNICODE);
+});
+
 // auth
 $router->get('/login', 'authcontroller@loginform');
 $router->post('/login', 'authcontroller@login');
@@ -140,9 +153,11 @@ $router->get('/purchaseinvoices', 'purchaseinvoicescontroller@index');
 $router->get('/purchaseinvoices/show', 'purchaseinvoicescontroller@show');
 $router->get('/purchaseinvoices/print', 'purchaseinvoicescontroller@printpage');
 $router->post('/purchaseinvoices/create-from-po', 'purchaseinvoicescontroller@createfrompo');
+$router->post('/purchaseinvoices/createfrompo', 'PurchaseInvoicesController@createfrompo');
+$router->post('/purchaseinvoices/receive', 'PurchaseInvoicesController@receive');
 
 // receipts (from purchase invoices)
-$router->post('/receipts', 'receiptscontroller@store');
+$router->post('/receipts', 'PurchaseInvoicesController@receive');
 $router->post('/receipts/delete', 'receiptscontroller@destroy');
 $router->get('/receipts/print', 'receiptscontroller@printgrn');
 
@@ -178,4 +193,21 @@ $router->post('/adjustments', 'adjustmentscontroller@store');
 $router->get('/adjustments/show', 'adjustmentscontroller@show');
 $router->get('/adjustments/print', 'adjustmentscontroller@printnote');
 
-$router->dispatch();
+// Track request performance
+$requestStart = microtime(true);
+
+try {
+    $router->dispatch();
+    $responseCode = http_response_code() ?: 200;
+} catch (\Throwable $e) {
+    // Let ErrorHandler handle the exception
+    $responseCode = 500;
+    throw $e;
+} finally {
+    // Log the request
+    $requestDuration = microtime(true) - $requestStart;
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    
+    \App\Core\Logger::request($method, $uri, $responseCode, $requestDuration);
+}
