@@ -4,7 +4,7 @@ This file contains project-specific information for Claude Code.
 
 ## Project Overview
 - **Type**: PHP Web Application - Spare Parts Management System
-- **Current Branch**: task/T007-database-security-hardening
+- **Current Branch**: task/T008-critical-database-indexing
 - **Main Branch**: main
 - **Status**: ✅ Phase 1 + T007 Complete - Enterprise Security Foundation Established
 
