@@ -4,7 +4,7 @@ This file contains project-specific information for Claude Code.
 
 ## Project Overview
 - **Type**: PHP Web Application - Spare Parts Management System
-- **Current Branch**: task/T008-critical-database-indexing
+- **Current Branch**: task/T009-eliminate-n-plus-1-queries
 - **Main Branch**: main
 - **Status**: ✅ Phase 1 + T007 + T008 Complete - Enterprise Security + High-Performance Database Foundation
 
