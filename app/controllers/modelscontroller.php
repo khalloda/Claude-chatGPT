@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\VehicleModel;
 use App\Models\Make;
+use App\Services\ReferenceDataCache;
 use function App\Core\require_auth;
 use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
@@ -42,7 +43,7 @@ final class ModelsController extends Controller
             redirect('/models/create');
         }
 
-        try { VehicleModel::create($makeId, $name, $slug); flash_set('success', 'Model created.'); }
+        try { VehicleModel::create($makeId, $name, $slug); ReferenceDataCache::clear('models_all'); ReferenceDataCache::clear('models_'.$makeId); flash_set('success', 'Model created.'); }
         catch (\Throwable $e) { flash_set('error', 'Error: ' . $e->getMessage()); redirect('/models/create'); }
 
         redirect('/models?make_id=' . $makeId);
@@ -73,7 +74,7 @@ final class ModelsController extends Controller
             redirect('/models');
         }
 
-        try { VehicleModel::update($id, $makeId, $name, $slug); flash_set('success', 'Model updated.'); }
+        try { VehicleModel::update($id, $makeId, $name, $slug); ReferenceDataCache::clear('models_all'); ReferenceDataCache::clear('models_'.$makeId); flash_set('success', 'Model updated.'); }
         catch (\Throwable $e) { flash_set('error', 'Error: ' . $e->getMessage()); redirect('/models/edit?id='.(int)$id); }
 
         redirect('/models?make_id=' . $makeId);
@@ -92,6 +93,7 @@ final class ModelsController extends Controller
         $ok = VehicleModel::delete($id);
         if ($ok) flash_set('success', 'Model deleted.'); else flash_set('error', 'Delete failed.');
         $redirMake = $item['make_id'] ?? null;
+        if ($ok && $redirMake) { ReferenceDataCache::clear('models_all'); ReferenceDataCache::clear('models_'.(int)$redirMake); }
         redirect('/models' . ($redirMake ? '?make_id=' . (int)$redirMake : ''));
     }
 }

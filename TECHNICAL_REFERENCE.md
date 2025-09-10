@@ -268,6 +268,7 @@ Tables touched by major controllers/models:
 
 - Index strategy: Pending scripts add composite indexes aligning with hottest queries; current schema lacks some composites.
 - Logging: `App/Core/Logger.php` logs request durations, DB timings, errors into `storage/logs/*` with rotation assumptions.
+- Log retention: For shared Windows hosting, periodically rotate and prune `storage/logs` (daily or when files exceed ~10–50 MB). Consider a scheduled task to keep the last N days (e.g., 14) and delete older files.
 - Caching: Redis keys configured in `config/redis.php`; product and report caching patterns available.
 - Known bottlenecks: Multi‑join searches without adequate indexes; inventory ledger history; stock aggregation; consider covering indexes and summary tables.
 - Tracing/Metrics: Not present; add lightweight request/DB metrics exporter or integrate with OpenTelemetry later.

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Make;
+use App\Services\ReferenceDataCache;
 use function App\Core\require_auth;
 use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
@@ -32,7 +33,7 @@ final class MakesController extends Controller
         $slug = trim((string)($_POST['slug'] ?? ''));
         if ($name === '' || $slug === '') { flash_set('error', 'Name and slug are required.'); redirect('/makes/create'); }
 
-        try { Make::create($name, $slug); flash_set('success', 'Make created.'); }
+        try { Make::create($name, $slug); ReferenceDataCache::clear('makes'); ReferenceDataCache::clear('models_all'); flash_set('success', 'Make created.'); }
         catch (\Throwable $e) { flash_set('error', 'Error: ' . $e->getMessage()); }
         redirect('/makes');
     }
@@ -55,7 +56,7 @@ final class MakesController extends Controller
         $slug = trim((string)($_POST['slug'] ?? ''));
         if ($id <= 0 || $name === '' || $slug === '') { flash_set('error', 'Invalid form data.'); redirect('/makes'); }
 
-        try { Make::update($id, $name, $slug); flash_set('success', 'Make updated.'); }
+        try { Make::update($id, $name, $slug); ReferenceDataCache::clear('makes'); ReferenceDataCache::clear('models_all'); flash_set('success', 'Make updated.'); }
         catch (\Throwable $e) { flash_set('error', 'Error: ' . $e->getMessage()); redirect('/makes/edit?id='.(int)$id); }
         redirect('/makes');
     }
@@ -68,7 +69,7 @@ final class MakesController extends Controller
         if ($id <= 0) { flash_set('error', 'Invalid id.'); redirect('/makes'); }
 
         if (!Make::delete($id)) { flash_set('error', 'Cannot delete: there are models under this make.'); }
-        else { flash_set('success', 'Make deleted.'); }
+        else { ReferenceDataCache::clear('makes'); ReferenceDataCache::clear('models_all'); flash_set('success', 'Make deleted.'); }
         redirect('/makes');
     }
 }

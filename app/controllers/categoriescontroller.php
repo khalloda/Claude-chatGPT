@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Category;
 use App\Models\Note;
+use App\Services\ReferenceDataCache;
 use function App\Core\require_auth;
 use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
@@ -45,6 +46,7 @@ final class CategoriesController extends Controller
 
         try {
             Category::create($parentId, $name, $slug);
+            ReferenceDataCache::clear('categories');
             flash_set('success', 'Category created.');
             redirect('/categories');
         } catch (\Throwable $e) {
@@ -91,6 +93,7 @@ final class CategoriesController extends Controller
 
         try {
             Category::update($id, $parentId, $name, $slug);
+            ReferenceDataCache::clear('categories');
             flash_set('success', 'Category updated.');
             redirect('/categories');
         } catch (\Throwable $e) {
@@ -118,6 +121,7 @@ final class CategoriesController extends Controller
             redirect('/categories');
         }
 
+        ReferenceDataCache::clear('categories');
         flash_set('success', 'Category deleted.');
         redirect('/categories');
     }

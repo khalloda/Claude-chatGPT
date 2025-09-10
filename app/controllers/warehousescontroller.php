@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\DB;
 use App\Models\Warehouse;
+use App\Services\ReferenceDataCache;
 
 use function App\Core\require_auth;
 use function App\Core\verify_csrf_request;
@@ -43,7 +44,7 @@ final class WarehousesController extends Controller
         $name = trim((string)($_POST['name'] ?? ''));
         $loc  = trim((string)($_POST['location'] ?? ''));
         if ($code===''||$name===''){ flash_set('error','Code and name are required.'); redirect('/warehouses/create'); }
-        try { Warehouse::create($code,$name,$loc ?: null); flash_set('success','Warehouse created.'); }
+        try { Warehouse::create($code,$name,$loc ?: null); ReferenceDataCache::clear('warehouses'); flash_set('success','Warehouse created.'); }
         catch(\Throwable $e){ flash_set('error','Error: '.$e->getMessage()); }
         redirect('/warehouses');
     }
@@ -67,7 +68,7 @@ final class WarehousesController extends Controller
         $id=(int)($_POST['id']??0);
         $code=trim((string)($_POST['code']??'')); $name=trim((string)($_POST['name']??'')); $loc=trim((string)($_POST['location']??''));
         if($id<=0||$code===''||$name===''){ flash_set('error','Invalid form data.'); redirect('/warehouses'); }
-        try { Warehouse::update($id,$code,$name,$loc?:null); flash_set('success','Warehouse updated.'); }
+        try { Warehouse::update($id,$code,$name,$loc?:null); ReferenceDataCache::clear('warehouses'); flash_set('success','Warehouse updated.'); }
         catch(\Throwable $e){ flash_set('error','Error: '.$e->getMessage()); redirect('/warehouses/edit?id='.$id); }
         redirect('/warehouses');
     }
@@ -78,7 +79,7 @@ final class WarehousesController extends Controller
         $id=(int)($_POST['id']??0);
         if($id<=0){ flash_set('error','Invalid id.'); redirect('/warehouses'); }
         if(!Warehouse::delete($id)){ flash_set('error','Cannot delete: stock exists.'); }
-        else { flash_set('success','Warehouse deleted.'); }
+        else { ReferenceDataCache::clear('warehouses'); flash_set('success','Warehouse deleted.'); }
         redirect('/warehouses');
     }
 
