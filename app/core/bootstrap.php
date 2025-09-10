@@ -20,6 +20,7 @@ require __DIR__ . '/flash.php';
 use App\Core\Env;
 use App\Core\Logger;
 use App\Core\ErrorHandler;
+use App\Services\SessionManager;
 
 // Initialize logging system
 Logger::init();
@@ -31,15 +32,20 @@ ErrorHandler::init();
 date_default_timezone_set(Env::get('APP_TIMEZONE', 'UTC'));
 $debug = Env::get('APP_DEBUG', 'false') === 'true';
 
-// secure session
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'secure'   => $isHttps,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    session_start();
+// Initialize session management with Redis support
+$sessionManager = SessionManager::getInstance();
+if (!$sessionManager->initialize()) {
+    Logger::error('Failed to initialize session management system');
+    // Fall back to default PHP sessions as emergency measure
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_start();
+    }
 }
