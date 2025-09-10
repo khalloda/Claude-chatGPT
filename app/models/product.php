@@ -16,23 +16,54 @@ final class Product
         return 'PRD' . $seq;
     }
 
-    public static function all(?string $q = null, ?int $cat = null, ?int $make = null, ?int $model = null): array
+    public static function all(?string $q = null, ?int $cat = null, ?int $make = null, ?int $model = null, int $limit = 100, int $offset = 0): array
     {
-        $sql = "SELECT p.*, c.name AS category_name, mk.name AS make_name, vm.name AS model_name,
-                       COALESCE(SUM(ps.qty_on_hand),0) AS on_hand,
-                       COALESCE(SUM(ps.qty_reserved),0) AS reserved
+        // Use optimized query with proper index hints and subquery optimization
+        $sql = "SELECT /*+ USE_INDEX(p, idx_products_category_make_model) */
+                       p.id, p.code, p.name, p.category_id, p.make_id, p.model_id, p.cost, p.price,
+                       c.name AS category_name, 
+                       mk.name AS make_name, 
+                       vm.name AS model_name,
+                       COALESCE(stock_summary.total_on_hand, 0) AS on_hand,
+                       COALESCE(stock_summary.total_reserved, 0) AS reserved
                 FROM products p
-                LEFT JOIN categories c ON c.id=p.category_id
-                LEFT JOIN makes mk ON mk.id=p.make_id
-                LEFT JOIN vehicle_models vm ON vm.id=p.model_id
-                LEFT JOIN product_stocks ps ON ps.product_id=p.id
+                LEFT JOIN categories c ON c.id = p.category_id
+                LEFT JOIN makes mk ON mk.id = p.make_id
+                LEFT JOIN vehicle_models vm ON vm.id = p.model_id
+                LEFT JOIN (
+                    SELECT /*+ USE_INDEX(ps, idx_product_stocks_warehouse_qty) */
+                           product_id,
+                           SUM(qty_on_hand) as total_on_hand,
+                           SUM(qty_reserved) as total_reserved
+                    FROM product_stocks ps
+                    GROUP BY product_id
+                ) stock_summary ON stock_summary.product_id = p.id
                 WHERE 1=1";
+        
         $args = [];
-        if ($q)   { $sql .= " AND (p.name LIKE ? OR p.code LIKE ?)"; $args[]="%$q%"; $args[]="%$q%"; }
-        if ($cat) { $sql .= " AND p.category_id=?"; $args[]=$cat; }
-        if ($make){ $sql .= " AND p.make_id=?";     $args[]=$make; }
-        if ($model){$sql.=" AND p.model_id=?";      $args[]=$model; }
-        $sql .= " GROUP BY p.id ORDER BY p.name";
+        
+        // Order WHERE conditions by selectivity (most selective first)
+        if ($cat) { 
+            $sql .= " AND p.category_id = ?"; 
+            $args[] = $cat; 
+        }
+        if ($make) { 
+            $sql .= " AND p.make_id = ?"; 
+            $args[] = $make; 
+        }
+        if ($model) { 
+            $sql .= " AND p.model_id = ?"; 
+            $args[] = $model; 
+        }
+        if ($q) { 
+            $sql .= " AND (p.name LIKE ? OR p.code LIKE ?)"; 
+            $args[] = "%$q%"; 
+            $args[] = "%$q%"; 
+        }
+        
+        $sql .= " ORDER BY p.name LIMIT ? OFFSET ?";
+        $args[] = $limit;
+        $args[] = $offset;
 
         $st = DB::conn()->prepare($sql);
         $st->execute($args);
@@ -41,10 +72,130 @@ final class Product
 
     public static function find(int $id): ?array
     {
+        // Use cache for frequently accessed products
+        static $cache = [];
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+        
         $st = DB::conn()->prepare('SELECT * FROM products WHERE id=? LIMIT 1');
         $st->execute([$id]);
         $r = $st->fetch(PDO::FETCH_ASSOC);
-        return $r ?: null;
+        $result = $r ?: null;
+        
+        // Cache the result
+        $cache[$id] = $result;
+        
+        return $result;
+    }
+    
+    /**
+     * Optimized search method with ranking
+     */
+    public static function search(string $query, int $limit = 20): array
+    {
+        if (empty(trim($query))) {
+            return [];
+        }
+        
+        $sql = "SELECT /*+ USE_INDEX(p, idx_products_name_code) */
+                       p.id, p.code, p.name, p.cost, p.price,
+                       c.name as category_name,
+                       mk.name as make_name,
+                       vm.name as model_name,
+                       CASE 
+                           WHEN p.code = ? THEN 1
+                           WHEN p.name = ? THEN 2
+                           WHEN p.code LIKE ? THEN 3
+                           WHEN p.name LIKE ? THEN 4
+                           ELSE 5
+                       END as relevance_score
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                LEFT JOIN makes mk ON mk.id = p.make_id
+                LEFT JOIN vehicle_models vm ON vm.id = p.model_id
+                WHERE p.name LIKE ? OR p.code LIKE ?
+                ORDER BY relevance_score, p.name
+                LIMIT ?";
+        
+        $searchTerm = "%{$query}%";
+        $exactMatch = $query;
+        $prefixMatch = $query . '%';
+        
+        $st = DB::conn()->prepare($sql);
+        $st->execute([
+            $exactMatch, $exactMatch,           // Exact matches
+            $prefixMatch, $prefixMatch,         // Prefix matches
+            $searchTerm, $searchTerm,           // General matches
+            $limit
+        ]);
+        
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+    
+    /**
+     * Get products with low stock
+     */
+    public static function getLowStock(int $threshold = 5, ?int $warehouseId = null): array
+    {
+        $sql = "SELECT /*+ USE_INDEX(ps, idx_product_stocks_warehouse_qty) */
+                       p.id, p.code, p.name, p.cost, p.price,
+                       c.name as category_name,
+                       w.name as warehouse_name,
+                       ps.qty_on_hand,
+                       ps.qty_reserved,
+                       (ps.qty_on_hand - ps.qty_reserved) as available_qty
+                FROM product_stocks ps
+                INNER JOIN products p ON p.id = ps.product_id
+                INNER JOIN warehouses w ON w.id = ps.warehouse_id
+                LEFT JOIN categories c ON c.id = p.category_id
+                WHERE ps.qty_on_hand <= ?";
+        
+        $params = [$threshold];
+        
+        if ($warehouseId !== null) {
+            $sql .= " AND ps.warehouse_id = ?";
+            $params[] = $warehouseId;
+        }
+        
+        $sql .= " ORDER BY ps.qty_on_hand ASC, p.name";
+        
+        $st = DB::conn()->prepare($sql);
+        $st->execute($params);
+        
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+    
+    /**
+     * Batch load products by IDs
+     */
+    public static function findMultiple(array $productIds): array
+    {
+        if (empty($productIds)) {
+            return [];
+        }
+        
+        $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
+        $sql = "SELECT p.*, c.name as category_name, mk.name as make_name, vm.name as model_name
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                LEFT JOIN makes mk ON mk.id = p.make_id
+                LEFT JOIN vehicle_models vm ON vm.id = p.model_id
+                WHERE p.id IN ($placeholders)
+                ORDER BY p.name";
+        
+        $st = DB::conn()->prepare($sql);
+        $st->execute($productIds);
+        
+        $results = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        
+        // Index by product ID for easy lookup
+        $indexed = [];
+        foreach ($results as $product) {
+            $indexed[(int)$product['id']] = $product;
+        }
+        
+        return $indexed;
     }
 
     public static function create(array $data): int
