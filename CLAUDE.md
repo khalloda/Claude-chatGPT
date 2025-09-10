@@ -4,7 +4,7 @@ This file contains project-specific information for Claude Code.
 
 ## Project Overview
 - **Type**: PHP Web Application - Spare Parts Management System
-- **Current Branch**: task/T007-database-security-hardening
+- **Current Branch**: task/T019-frontend-performance-optimization
 - **Main Branch**: main
 - **Status**: ✅ Phase 1 + T007 + T008 + T009 + T016 + T017 + T018 Complete - Enterprise Security + High-Performance Database + N+1 Optimization + Redis Distributed Caching + Redis Session Storage + Database Query Optimization
 
@@ -158,5 +158,5 @@ php -S localhost:8000 -t public/       # Development server
 
 ## Branch Strategy
 - Always start new branches for each major task (T###)
-- Current branch: `task/T007-database-security-hardening`
+- Current branch: `task/T019-frontend-performance-optimization`
 - Main branch for production releases: `main`
