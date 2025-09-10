@@ -4,7 +4,7 @@ This file contains project-specific information for Claude Code.
 
 ## Project Overview
 - **Type**: PHP Web Application - Spare Parts Management System
-- **Current Branch**: task/T016-redis-caching-implementation
+- **Current Branch**: task/T017-session-storage-migration-to-redis
 - **Main Branch**: main
 - **Status**: ✅ Phase 1 + T007 + T008 + T009 + T016 Complete - Enterprise Security + High-Performance Database + N+1 Optimization + Redis Distributed Caching
 
@@ -126,5 +126,5 @@ php -S localhost:8000 -t public/       # Development server
 
 ## Branch Strategy
 - Always start new branches for each major task (T###)
-- Current branch: `task/T016-redis-caching-implementation`
+- Current branch: `task/T017-session-storage-migration-to-redis`
 - Main branch for production releases: `main`
