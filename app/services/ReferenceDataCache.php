@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\DB;
+use App\Services\RedisCache;
 use PDO;
 
 /**
@@ -136,6 +137,10 @@ final class ReferenceDataCache
     {
         self::$cache = [];
         
+        // Clear Redis cache
+        RedisCache::init();
+        RedisCache::deletePattern('ref:*');
+        
         // Also clear file cache if exists
         $cacheDir = dirname(__DIR__, 2) . '/storage/cache';
         if (is_dir($cacheDir)) {
@@ -153,6 +158,10 @@ final class ReferenceDataCache
     {
         unset(self::$cache[$key]);
         
+        // Clear from Redis
+        RedisCache::init();
+        RedisCache::delete("ref:{$key}");
+        
         $cacheFile = self::getCacheFile($key);
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
@@ -168,10 +177,12 @@ final class ReferenceDataCache
     }
     
     /**
-     * Generic cached data retrieval with memory and file caching
+     * Generic cached data retrieval with Redis, memory and file caching
      */
     private static function getCachedData(string $key, callable $dataLoader): array
     {
+        $redisKey = "ref:{$key}";
+        
         // Check memory cache first
         if (isset(self::$cache[$key])) {
             $cached = self::$cache[$key];
@@ -181,13 +192,27 @@ final class ReferenceDataCache
             unset(self::$cache[$key]);
         }
         
-        // Check file cache
+        // Check Redis cache
+        RedisCache::init();
+        $redisData = RedisCache::get($redisKey);
+        if ($redisData !== false && is_array($redisData)) {
+            // Store in memory cache for faster subsequent access
+            self::$cache[$key] = [
+                'data' => $redisData,
+                'expires' => time() + self::$cacheLifetime,
+                'created' => time()
+            ];
+            return $redisData;
+        }
+        
+        // Check file cache as fallback
         $cacheFile = self::getCacheFile($key);
         if (file_exists($cacheFile)) {
             $cached = @unserialize(file_get_contents($cacheFile));
             if ($cached && is_array($cached) && $cached['expires'] > time()) {
-                // Store in memory cache too
+                // Store in memory and Redis cache
                 self::$cache[$key] = $cached;
+                RedisCache::set($redisKey, $cached['data'], self::$cacheLifetime);
                 return $cached['data'];
             }
             @unlink($cacheFile);
@@ -206,7 +231,10 @@ final class ReferenceDataCache
         // Store in memory cache
         self::$cache[$key] = $cached;
         
-        // Store in file cache
+        // Store in Redis cache
+        RedisCache::set($redisKey, $data, self::$cacheLifetime);
+        
+        // Store in file cache as backup
         $cacheDir = dirname($cacheFile);
         if (!is_dir($cacheDir)) {
             @mkdir($cacheDir, 0755, true);
