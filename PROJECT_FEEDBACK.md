@@ -117,3 +117,14 @@
 
 If you’d like, I can prepare a PR to (a) adjust the SQL scripts safely for the current schema, and (b) add a minimal migration runner + CI job to validate migrations on each push.
 
+## Update — 2025-09-10
+
+- Defect fixes:
+  - PI numbering corrected (suffix extraction) + retry on duplicate.
+  - Receiving flow supports both PO-item and product/warehouse arrays; stock and receipts now update correctly.
+  - CSRF/session reliability improved (helpers ensure active session).
+- Implementations:
+  - File sessions in prod Windows Plesk, `/health` endpoint, dashboard badges.
+  - Migration runner & CI, idempotent index migrations, verification report migration.
+- Recommendations (next):
+  - Add authorization middleware, smoke tests, and a central `doc_sequences` approach for all document numbers to avoid race conditions entirely.

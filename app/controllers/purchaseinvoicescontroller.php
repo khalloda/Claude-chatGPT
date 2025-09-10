@@ -108,69 +108,92 @@ final class PurchaseInvoicesController extends Controller
         require_auth();
         if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
 
-        $piId   = (int)($_POST['purchase_invoice_id'] ?? 0);
+        // Accept multiple param names from different forms
+        $piId   = (int)($_POST['purchase_invoice_id'] ?? ($_POST['invoice_id'] ?? ($_POST['id'] ?? 0)));
         $pi     = \App\Models\PurchaseInvoice::find($piId);
         if (!$pi) { flash_set('error','Invoice not found.'); redirect('/purchaseinvoices'); }
 
         // Arrays from the form
         $poItemIds = $_POST['rec_po_item_id'] ?? [];
         $qtys      = $_POST['rec_qty'] ?? [];
+        $prodIds   = $_POST['rec_product_id'] ?? [];
+        $whIds     = $_POST['rec_warehouse_id'] ?? [];
+        $prices    = $_POST['rec_price'] ?? [];
 
         $pdo = DB::conn(); $pdo->beginTransaction();
         try {
-            foreach ($poItemIds as $i => $poItemIdRaw) {
-                $poItemId = (int)$poItemIdRaw;
-                $recv     = max(0, (int)($qtys[$i] ?? 0));
-                if ($poItemId <= 0 || $recv <= 0) { continue; }
+            $didReceive = 0;
+            if (!empty($poItemIds)) {
+                // Legacy path: explicit PO item ids
+                foreach ($poItemIds as $i => $poItemIdRaw) {
+                    $poItemId = (int)$poItemIdRaw;
+                    $recv     = max(0, (int)($qtys[$i] ?? 0));
+                    if ($poItemId <= 0 || $recv <= 0) { continue; }
 
-                // Load PO item (and lock it)
-                $st = $pdo->prepare("
-                    SELECT id, purchase_order_id, product_id, warehouse_id, qty, price,
-                           COALESCE(received_qty,0) AS received_qty
-                    FROM purchase_order_items
-                    WHERE id=? FOR UPDATE
-                ");
-                $st->execute([$poItemId]);
-                $it = $st->fetch(\PDO::FETCH_ASSOC);
-                if (!$it) { throw new \RuntimeException('PO item not found: '.$poItemId); }
-                if ((int)$it['purchase_order_id'] !== (int)$pi['purchase_order_id']) {
-                    throw new \RuntimeException('Item does not belong to this PO.');
+                    $st = $pdo->prepare(
+                        "SELECT id, purchase_order_id, product_id, warehouse_id, qty, price, COALESCE(received_qty,0) AS received_qty
+                         FROM purchase_order_items WHERE id=? FOR UPDATE"
+                    );
+                    $st->execute([$poItemId]);
+                    $it = $st->fetch(\PDO::FETCH_ASSOC);
+                    if (!$it) { throw new \RuntimeException('PO item not found: '.$poItemId); }
+                    if ((int)$it['purchase_order_id'] !== (int)$pi['purchase_order_id']) {
+                        throw new \RuntimeException('Item does not belong to this PO.');
+                    }
+
+                    $remaining = max(0, (int)$it['qty'] - (int)$it['received_qty']);
+                    if ($remaining <= 0) { continue; }
+                    $recv = min($recv, $remaining);
+
+                    $this->upsertStock($pdo, (int)$it['product_id'], (int)$it['warehouse_id'], $recv, (float)$it['price'], (int)$piId);
+
+                    $pdo->prepare('INSERT INTO receipts (purchase_invoice_id, product_id, warehouse_id, qty, price) VALUES (?,?,?,?,?)')
+                        ->execute([(int)$piId, (int)$it['product_id'], (int)$it['warehouse_id'], (int)$recv, (float)$it['price']]);
+
+                    $pdo->prepare('UPDATE purchase_order_items SET received_qty = LEAST(qty, COALESCE(received_qty,0) + ?) WHERE id=?')
+                        ->execute([$recv, $poItemId]);
+                    $didReceive += $recv;
                 }
+            } else {
+                // New path: product/warehouse arrays from PI view
+                $qByKey = $qtys;
+                foreach ($prodIds as $i => $pidRaw) {
+                    $pid = (int)$pidRaw;
+                    $wid = (int)($whIds[$i] ?? 0);
+                    $recv = max(0, (int)($qtys[$i] ?? 0));
+                    $price = (float)($prices[$i] ?? 0);
+                    if ($pid <= 0 || $wid <= 0 || $recv <= 0) { continue; }
 
-                $remaining = max(0, (int)$it['qty'] - (int)$it['received_qty']);
-                if ($remaining <= 0) { continue; }
-                $recv = min($recv, $remaining);
+                    $st = $pdo->prepare(
+                        "SELECT id, purchase_order_id, product_id, warehouse_id, qty, price, COALESCE(received_qty,0) AS received_qty
+                         FROM purchase_order_items WHERE purchase_order_id=? AND product_id=? AND warehouse_id=? FOR UPDATE"
+                    );
+                    $st->execute([(int)$pi['purchase_order_id'], $pid, $wid]);
+                    $it = $st->fetch(\PDO::FETCH_ASSOC);
+                    if (!$it) { throw new \RuntimeException('PO line not found for product/warehouse'); }
 
-                // Upsert stock with weighted avg cost (lock stock row if exists)
-                $this->upsertStock(
-                    $pdo,
-                    (int)$it['product_id'],
-                    (int)$it['warehouse_id'],
-                    $recv,
-                    (float)$it['price'],
-                    (int)$piId
-                );
+                    $remaining = max(0, (int)$it['qty'] - (int)$it['received_qty']);
+                    if ($remaining <= 0) { continue; }
+                    $take = min($recv, $remaining);
 
-                // Log receipt row (GRN)
-                $pdo->prepare(
-                    'INSERT INTO receipts (purchase_invoice_id, product_id, warehouse_id, qty, price) VALUES (?,?,?,?,?)'
-                )->execute([
-                    (int)$piId,
-                    (int)$it['product_id'],
-                    (int)$it['warehouse_id'],
-                    (int)$recv,
-                    (float)$it['price'],
-                ]);
+                    $unitPrice = $price > 0 ? $price : (float)$it['price'];
+                    $this->upsertStock($pdo, $pid, $wid, $take, $unitPrice, (int)$piId);
 
-                // Update received_qty (cap at qty)
-                $pdo->prepare("
-                    UPDATE purchase_order_items
-                       SET received_qty = LEAST(qty, COALESCE(received_qty,0) + ?)
-                     WHERE id=?")->execute([$recv, $poItemId]);
+                    $pdo->prepare('INSERT INTO receipts (purchase_invoice_id, product_id, warehouse_id, qty, price) VALUES (?,?,?,?,?)')
+                        ->execute([(int)$piId, $pid, $wid, $take, $unitPrice]);
+
+                    $pdo->prepare('UPDATE purchase_order_items SET received_qty = LEAST(qty, COALESCE(received_qty,0) + ?) WHERE id=?')
+                        ->execute([$take, (int)$it['id']]);
+                    $didReceive += $take;
+                }
             }
 
             // Update PO status
             $this->refreshPoReceiveStatus($pdo, (int)$pi['purchase_order_id']);
+
+            if ($didReceive <= 0) {
+                throw new \RuntimeException('Nothing to receive. Enter a positive quantity.');
+            }
 
             $pdo->commit();
             flash_set('success','Items received.');

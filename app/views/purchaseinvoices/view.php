@@ -155,6 +155,42 @@ $ap_balance    = max(0.0, (float)$pi['total'] - (float)$pi['paid_amount'] - $cre
     </div>
   </form>
 
+  <!-- ========== GRN (Receipts) History ========== -->
+  <h3 style="margin-top:18px;">GRN History</h3>
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Date</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Product</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Warehouse</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Qty</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Unit Cost</th>
+    </tr></thead>
+    <tbody>
+      <?php foreach (($receipts ?? []) as $r): ?>
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+            <?= htmlspecialchars($r['created_at'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+            <?= htmlspecialchars(($r['product_code'] ?? '').' — '.($r['product_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+            <?= htmlspecialchars($r['warehouse_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;text-align:right;">
+            <?= (int)($r['qty'] ?? 0) ?>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;text-align:right;">
+            <?= number_format((float)($r['price'] ?? 0), 2) ?>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      <?php if (empty($receipts)): ?>
+        <tr><td colspan="5" style="padding:12px;">No receipts yet.</td></tr>
+      <?php endif; ?>
+    </tbody>
+  </table>
+
   <!-- ========== Purchase Returns / Debit Note (NEW) ========== -->
   <hr style="margin:16px 0;">
   <h3>Debit Note (Return to Supplier)</h3>

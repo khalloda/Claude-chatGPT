@@ -307,3 +307,18 @@ Tables touched by major controllers/models:
 - Add CI for lint/tests and a migration pipeline; include dry‑run/explain plans.
 - Document and automate DB migration order and safety checks.
 
+
+## Recent Updates (2025-09-10)
+
+- Sessions: defaulted to file-based sessions for Windows Plesk; CSRF helpers hardened to always operate with an active session.
+- Health: `/health` endpoint now returns JSON with session/database/redis status and 200/207 status code.
+- Purchase Invoices:
+  - Fixed `PurchaseInvoice::nextNumber()` to extract the numeric suffix correctly and added retry on unique constraint conflicts.
+  - Receiving flow now supports both legacy `rec_po_item_id[]` and PI page arrays (`rec_product_id[]`, `rec_warehouse_id[]`, `rec_qty[]`, `rec_price[]`).
+  - Items & Receiving section shows the correct received counts after posting.
+- GRN: Added a GRN (receipts) history table on the PI page listing each posted receipt row.
+- Migrations:
+  - Added safe, idempotent index migrations in `scripts/migrations/*idx_*.sql`.
+  - Added migration runner `scripts/migrate.php` and CI workflow `migrations-check.yml`.
+  - Added verification report migration `2025-09-10_verify_expected_indexes.sql` (read-only).
+- Product stocks: Removed duplicate unique keys on `(product_id, warehouse_id)` via tracked migration.

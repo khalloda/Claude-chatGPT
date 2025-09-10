@@ -34,8 +34,20 @@ Stability and schema alignment fixes applied to Purchase Invoices receive flow a
 - Update SessionManager to pass string defaults to `Env::get` and cast afterward (prevents TypeError in logs).
 - Scan for other numeric defaults across the app and align.
 
+## Update — 2025-09-10
+
+- Sessions: Using file-based sessions for production Windows Plesk; CSRF helpers now start the session if needed.
+- Health endpoint: JSON report at `/health`; dashboard chips show session backend + DB latency.
+- Purchase Invoices:
+  - Fixed PI numbering (correct suffix extraction) and added retry on duplicates.
+  - Receiving flow fixed to accept both PO-item ids and product/warehouse arrays; stock, receipts, and ledger now update.
+  - GRN history table added to PI page.
+- Migrations:
+  - Drop duplicate unique keys on `product_stocks` (applied).
+  - Added index migrations and read-only verification report migration.
+  - Migration runner `scripts/migrate.php` and CI `migrations-check.yml` added.
+
 ## Risks / Mitigations
 
 - Route alias removal: If external clients post to `/receipts`, they must switch to `/purchaseinvoices/receive`. If keeping compatibility is required, we can add a lightweight redirect handler instead of removal.
 - PO status logic simplified: If business wants granular partial status, the DB enum must be extended first.
-
