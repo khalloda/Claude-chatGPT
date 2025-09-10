@@ -10,6 +10,7 @@ use App\Models\Make;
 use App\Models\VehicleModel;
 use App\Models\Warehouse;
 use App\Models\Note;
+use App\Services\ReferenceDataCache;
 use function App\Core\require_auth;
 use function App\Core\verify_csrf_request;
 use function App\Core\flash_set;
@@ -29,9 +30,9 @@ final class ProductsController extends Controller
         $this->view('products/index', [
             'items' => $items,
             'q' => $q, 'category_id'=>$cat, 'make_id'=>$make, 'model_id'=>$model,
-            'categories' => Category::all(),
-            'makes' => Make::options(),
-            'models' => VehicleModel::all($make ?: null)
+            'categories' => ReferenceDataCache::getCategories(),
+            'makes' => ReferenceDataCache::getMakes(),
+            'models' => ReferenceDataCache::getModels($make ?: null)
         ]);
     }
 
@@ -41,9 +42,9 @@ final class ProductsController extends Controller
         $this->view('products/form', [
             'mode'=>'create',
             'item'=>['code'=>Product::nextCode()],
-            'categories'=>Category::all(),
-            'makes'=>Make::options(),
-            'models'=>VehicleModel::all()
+            'categories'=>ReferenceDataCache::getCategories(),
+            'makes'=>ReferenceDataCache::getMakes(),
+            'models'=>ReferenceDataCache::getModels()
         ]);
     }
 
@@ -88,9 +89,9 @@ if (!$item) {
 $this->view('products/form', [
     'mode'       => 'edit',
     'item'       => $item,                      // <-- use $item (not $it)
-    'categories' => \App\Models\Category::all(),
-    'makes'      => \App\Models\Make::options(),
-    'models'     => \App\Models\VehicleModel::all($item['make_id'] ? (int)$item['make_id'] : null),
+    'categories' => ReferenceDataCache::getCategories(),
+    'makes'      => ReferenceDataCache::getMakes(),
+    'models'     => ReferenceDataCache::getModels($item['make_id'] ? (int)$item['make_id'] : null),
     'notes'      => \App\Models\Note::for('product', (int)$item['id']),
 ]);
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\DB;
+use App\Services\ReferenceDataCache;
 use PDO;
 
 final class Product
@@ -83,14 +84,36 @@ final class Product
 
     public static function stocks(int $productId): array
     {
-        $st = DB::conn()->prepare('SELECT w.id, w.name,
-                  COALESCE(ps.qty_on_hand,0) AS qty_on_hand,
-                  COALESCE(ps.qty_reserved,0) AS qty_reserved
-               FROM warehouses w
-               LEFT JOIN product_stocks ps ON ps.warehouse_id=w.id AND ps.product_id=?
-               ORDER BY w.name');
+        // Use cached warehouse data to avoid N+1 queries
+        $warehouses = ReferenceDataCache::getWarehouses();
+        
+        // Get stock data for all warehouses at once
+        $st = DB::conn()->prepare('SELECT warehouse_id, qty_on_hand, qty_reserved 
+                                   FROM product_stocks WHERE product_id=?');
         $st->execute([$productId]);
-        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $stockData = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        
+        // Create indexed array for quick lookup
+        $stockMap = [];
+        foreach ($stockData as $stock) {
+            $stockMap[$stock['warehouse_id']] = $stock;
+        }
+        
+        // Combine warehouse data with stock data
+        $result = [];
+        foreach ($warehouses as $warehouse) {
+            $warehouseId = (int)$warehouse['id'];
+            $stock = $stockMap[$warehouseId] ?? ['qty_on_hand' => 0, 'qty_reserved' => 0];
+            
+            $result[] = [
+                'id' => $warehouseId,
+                'name' => $warehouse['name'],
+                'qty_on_hand' => (int)$stock['qty_on_hand'],
+                'qty_reserved' => (int)$stock['qty_reserved']
+            ];
+        }
+        
+        return $result;
     }
 
     public static function saveStocks(int $productId, array $rows): void
