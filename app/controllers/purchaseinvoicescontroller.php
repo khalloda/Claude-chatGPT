@@ -76,7 +76,7 @@ final class PurchaseInvoicesController extends Controller
             $piNo = PurchaseInvoice::nextNumber();
             $ins = $pdo->prepare("INSERT INTO purchase_invoices
                 (pi_no, purchase_order_id, supplier_id, subtotal, tax_rate, tax_amount, total, status, created_at)
-                VALUES (?,?,?,?,?,?,?, 'open', NOW())");
+                VALUES (?,?,?,?,?,?,?, 'unpaid', NOW())");
             $ins->execute([
                 $piNo, $poId, (int)$po['supplier_id'], (float)$po['subtotal'],
                 (float)$po['tax_rate'], (float)$po['tax_amount'], (float)$po['total']
@@ -141,6 +141,17 @@ final class PurchaseInvoicesController extends Controller
                     (int)$piId
                 );
 
+                // Log receipt row (GRN)
+                $pdo->prepare(
+                    'INSERT INTO receipts (purchase_invoice_id, product_id, warehouse_id, qty, price) VALUES (?,?,?,?,?)'
+                )->execute([
+                    (int)$piId,
+                    (int)$it['product_id'],
+                    (int)$it['warehouse_id'],
+                    (int)$recv,
+                    (float)$it['price'],
+                ]);
+
                 // Update received_qty (cap at qty)
                 $pdo->prepare("
                     UPDATE purchase_order_items
@@ -191,10 +202,20 @@ final class PurchaseInvoicesController extends Controller
                     (int)$piId
                 );
 
-                $pdo->prepare("
-                    UPDATE purchase_order_items
-                       SET received_qty = qty
-                     WHERE id=?")->execute([(int)$it['id']]);
+                // Log receipt row for remaining qty
+                $pdo->prepare(
+                    'INSERT INTO receipts (purchase_invoice_id, product_id, warehouse_id, qty, price) VALUES (?,?,?,?,?)'
+                )->execute([
+                    (int)$piId,
+                    (int)$it['product_id'],
+                    (int)$it['warehouse_id'],
+                    (int)$remaining,
+                    (float)$it['price'],
+                ]);
+
+                $pdo->prepare(
+                    "UPDATE purchase_order_items SET received_qty = qty WHERE id=?"
+                )->execute([(int)$it['id']]);
             }
 
             $this->refreshPoReceiveStatus($pdo, (int)$pi['purchase_order_id']);
@@ -231,7 +252,7 @@ final class PurchaseInvoicesController extends Controller
     private function upsertStock(\PDO $pdo, int $productId, int $warehouseId, int $qty, float $unitCost, int $piId): void
     {
         // Lock existing stock row (if any)
-        $sel = $pdo->prepare("SELECT id, qty_on_hand, avg_cost FROM product_stocks WHERE product_id=? AND warehouse_id=? FOR UPDATE");
+        $sel = $pdo->prepare("SELECT qty_on_hand, avg_cost FROM product_stocks WHERE product_id=? AND warehouse_id=? FOR UPDATE");
         $sel->execute([$productId, $warehouseId]);
         $row = $sel->fetch(\PDO::FETCH_ASSOC);
 
@@ -241,8 +262,8 @@ final class PurchaseInvoicesController extends Controller
             $newQty = $oldQty + $qty;
             $newAvg = $newQty > 0 ? (($oldQty * $oldAvg) + ($qty * $unitCost)) / $newQty : $unitCost;
 
-            $upd = $pdo->prepare("UPDATE product_stocks SET qty_on_hand=?, avg_cost=? WHERE id=?");
-            $upd->execute([$newQty, round($newAvg, 4), (int)$row['id']]);
+            $upd = $pdo->prepare("UPDATE product_stocks SET qty_on_hand=?, avg_cost=? WHERE product_id=? AND warehouse_id=?");
+            $upd->execute([$newQty, round($newAvg, 4), $productId, $warehouseId]);
         } else {
             $ins = $pdo->prepare("INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved, avg_cost)
                                   VALUES (?,?,?,?,?)");
@@ -254,7 +275,7 @@ final class PurchaseInvoicesController extends Controller
             INSERT INTO inventory_ledger
                 (product_id, warehouse_id, doc_type, doc_id, qty_delta, unit_cost, value_delta)
             VALUES (?,?,?,?,?,?,?)")->execute([
-                $productId, $warehouseId, 'po_receive', $piId, +$qty, $unitCost, $qty * $unitCost
+                $productId, $warehouseId, 'receipt', $piId, +$qty, $unitCost, $qty * $unitCost
             ]);
     }
 
@@ -271,129 +292,11 @@ final class PurchaseInvoicesController extends Controller
 
         $total = (float)($row['total_qty'] ?? 0);
         $rec   = (float)($row['rec_qty'] ?? 0);
-        $status = ($rec <= 0) ? 'ordered' : (($rec < $total) ? 'partially_received' : 'received');
+        // Live enum: 'draft','ordered','received','closed'. No 'partially_received'.
+        $status = ($total > 0 && $rec >= $total) ? 'received' : 'ordered';
 
         $pdo->prepare("UPDATE purchase_orders SET status=? WHERE id=?")->execute([$status, $poId]);
     }
 
-    /**
-     * POST /purchaseinvoices/receive  (and legacy alias: /receipts)
-     * Consumes arrays: rec_product_id[], rec_warehouse_id[], rec_qty[], rec_price[]
-     * - Caps over-receipts to remaining (ordered - already received)
-     * - Upserts product_stocks (qty_on_hand, avg_cost) per (product, warehouse)
-     * - Logs each receipt row in purchase_receipts for audit
-     */
-    public function receive(): void
-    {
-        require_auth();
-        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }
-
-        $piId = (int)($_POST['invoice_id'] ?? $_POST['id'] ?? 0);
-        if ($piId <= 0) { flash_set('error','Missing invoice id.'); redirect('/purchaseinvoices'); }
-
-        $pdo = DB::conn();
-        $pdo->beginTransaction();
-        try {
-            // Ensure receipt log table exists (idempotent)
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS purchase_receipts (
-                  id INT AUTO_INCREMENT PRIMARY KEY,
-                  purchase_invoice_id INT NOT NULL,
-                  product_id INT NOT NULL,
-                  warehouse_id INT NOT NULL,
-                  qty INT NOT NULL,
-                  unit_cost DECIMAL(12,4) NOT NULL,
-                  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  INDEX (purchase_invoice_id),
-                  INDEX (product_id, warehouse_id),
-                  CONSTRAINT fk_pr_pi FOREIGN KEY (purchase_invoice_id) REFERENCES purchase_invoices(id)
-                    ON DELETE CASCADE ON UPDATE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            ");
-
-            // Read posted arrays
-            $pids = $_POST['rec_product_id'] ?? [];
-            $wids = $_POST['rec_warehouse_id'] ?? [];
-            $qtys = $_POST['rec_qty'] ?? [];
-            $prices = $_POST['rec_price'] ?? [];
-
-            // Resolve the related PO
-            $pi = \App\Models\PurchaseInvoice::find($piId);
-            if (!$pi) { throw new \RuntimeException('Invoice not found.'); }
-            $poId = (int)$pi['purchase_order_id'];
-            if ($poId <= 0) { throw new \RuntimeException('Invoice is not linked to a PO.'); }
-
-            // Prepared lookups
-            $qOrdered = $pdo->prepare("
-                SELECT qty FROM purchase_order_items
-                WHERE purchase_order_id=? AND product_id=? AND warehouse_id=? LIMIT 1
-            ");
-            $qAlready = $pdo->prepare("
-                SELECT COALESCE(SUM(qty),0)
-                FROM purchase_receipts
-                WHERE purchase_invoice_id IN (
-                      SELECT id FROM purchase_invoices WHERE purchase_order_id = ?
-                )
-                AND product_id=? AND warehouse_id=?
-            ");
-
-            // Upsert stock
-            $upsertStock = $pdo->prepare("
-                INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved, avg_cost)
-                VALUES (?,?,?,?,?)
-                ON DUPLICATE KEY UPDATE
-                  qty_on_hand = qty_on_hand + VALUES(qty_on_hand),
-                  avg_cost = ROUND(
-                      ((qty_on_hand * avg_cost) + (VALUES(qty_on_hand) * VALUES(avg_cost)))
-                      / NULLIF(qty_on_hand + VALUES(qty_on_hand), 0), 4
-                  )
-            ");
-
-            $insReceipt = $pdo->prepare("
-                INSERT INTO purchase_receipts (purchase_invoice_id, product_id, warehouse_id, qty, unit_cost)
-                VALUES (?,?,?,?,?)
-            ");
-
-            $lines = 0;
-            foreach ($pids as $i => $pidRaw) {
-                $pid = (int)$pidRaw;
-                $wid = (int)($wids[$i] ?? 0);
-                $qty = (int)($qtys[$i] ?? 0);
-                $cost = (float)($prices[$i] ?? 0);
-                if ($pid <= 0 || $wid <= 0 || $qty <= 0) { continue; }
-
-                // Cap to remaining
-                $qOrdered->execute([$poId, $pid, $wid]);
-                $ordered = (int)$qOrdered->fetchColumn();
-                if ($ordered <= 0) { continue; } // product/warehouse not on PO
-
-                $qAlready->execute([$poId, $pid, $wid]);
-                $already = (int)$qAlready->fetchColumn();
-                $remaining = max(0, $ordered - $already);
-                if ($remaining <= 0) { continue; }
-
-                $take = min($qty, $remaining);
-                if ($take <= 0) { continue; }
-
-                // Stock upsert with moving-average (avg_cost column is per-unit cost)
-                $upsertStock->execute([$pid, $wid, $take, 0, $cost]);
-
-                // Audit row
-                $insReceipt->execute([$piId, $pid, $wid, $take, $cost]);
-                $lines++;
-            }
-
-            if ($lines === 0) {
-                throw new \RuntimeException('Nothing to receive (check remaining quantities).');
-            }
-
-            $pdo->commit();
-            flash_set('success', 'Receipt posted.');
-            redirect('/purchaseinvoices/show?id=' . $piId);
-        } catch (\Throwable $e) {
-            $pdo->rollBack();
-            flash_set('error', 'Receive failed: ' . $e->getMessage());
-            redirect('/purchaseinvoices/show?id=' . $piId);
-        }
-    }
+    
 }

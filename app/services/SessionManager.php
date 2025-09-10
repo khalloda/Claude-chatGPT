@@ -45,7 +45,7 @@ class SessionManager
     {
         $this->config = [
             'driver' => Env::get('SESSION_DRIVER', 'redis'),
-            'lifetime' => (int)Env::get('SESSION_LIFETIME', 7200), // 2 hours
+            'lifetime' => (int)Env::get('SESSION_LIFETIME', '7200'), // 2 hours
             'path' => Env::get('SESSION_PATH', '/'),
             'domain' => Env::get('SESSION_DOMAIN', null),
             'secure' => Env::get('SESSION_SECURE', 'auto') === 'true' || 
@@ -53,8 +53,8 @@ class SessionManager
             'httponly' => Env::get('SESSION_HTTP_ONLY', 'true') === 'true',
             'samesite' => Env::get('SESSION_SAME_SITE', 'Lax'),
             'cookie_name' => Env::get('SESSION_COOKIE', 'spare_parts_session'),
-            'gc_probability' => (int)Env::get('SESSION_GC_PROBABILITY', 1),
-            'gc_divisor' => (int)Env::get('SESSION_GC_DIVISOR', 100),
+            'gc_probability' => (int)Env::get('SESSION_GC_PROBABILITY', '1'),
+            'gc_divisor' => (int)Env::get('SESSION_GC_DIVISOR', '100'),
             'encrypt' => Env::get('SESSION_ENCRYPT', 'false') === 'true',
         ];
         
@@ -155,11 +155,11 @@ class SessionManager
         
         $sessionConfig = [
             'host' => $redisConfig['session']['host'] ?? Env::get('REDIS_SESSION_HOST', '127.0.0.1'),
-            'port' => $redisConfig['session']['port'] ?? (int)Env::get('REDIS_SESSION_PORT', 6379),
+            'port' => $redisConfig['session']['port'] ?? (int)Env::get('REDIS_SESSION_PORT', '6379'),
             'password' => $redisConfig['session']['password'] ?? Env::get('REDIS_SESSION_PASSWORD', null),
-            'database' => $redisConfig['session']['database'] ?? (int)Env::get('REDIS_SESSION_DATABASE', 1),
+            'database' => $redisConfig['session']['database'] ?? (int)Env::get('REDIS_SESSION_DATABASE', '1'),
             'prefix' => $redisConfig['session']['prefix'] ?? Env::get('REDIS_SESSION_PREFIX', 'sess:'),
-            'timeout' => $redisConfig['session']['timeout'] ?? (float)Env::get('REDIS_SESSION_TIMEOUT', 5.0),
+            'timeout' => $redisConfig['session']['timeout'] ?? (float)Env::get('REDIS_SESSION_TIMEOUT', '5.0'),
             'persistent' => $redisConfig['session']['persistent'] ?? (Env::get('REDIS_SESSION_PERSISTENT', 'true') === 'true'),
             'max_lifetime' => $this->config['lifetime']
         ];

@@ -6,7 +6,8 @@
       "Bash(php:*)",
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

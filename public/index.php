@@ -153,11 +153,13 @@ $router->get('/purchaseinvoices', 'purchaseinvoicescontroller@index');
 $router->get('/purchaseinvoices/show', 'purchaseinvoicescontroller@show');
 $router->get('/purchaseinvoices/print', 'purchaseinvoicescontroller@printpage');
 $router->post('/purchaseinvoices/create-from-po', 'purchaseinvoicescontroller@createfrompo');
-$router->post('/purchaseinvoices/createfrompo', 'PurchaseInvoicesController@createfrompo');
-$router->post('/purchaseinvoices/receive', 'PurchaseInvoicesController@receive');
+$router->post('/purchaseinvoices/receive', 'purchaseinvoicescontroller@receive');
 
 // receipts (from purchase invoices)
-$router->post('/receipts', 'PurchaseInvoicesController@receive');
+$router->post('/receipts', function () {
+    // Preserve method for compatibility
+    header('Location: /purchaseinvoices/receive', true, 308);
+});
 $router->post('/receipts/delete', 'receiptscontroller@destroy');
 $router->get('/receipts/print', 'receiptscontroller@printgrn');
 
