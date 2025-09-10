@@ -12,6 +12,27 @@ use function App\Core\redirect;
 
 final class ReceiptsController extends Controller
 {
+    /** List recent GRNs (goods receipts) aggregated across all PIs */
+    public function index(): void {
+        require_auth();
+        $pdo = DB::conn();
+        $st = $pdo->query("SELECT r.id,
+                                   r.created_at,
+                                   r.purchase_invoice_id,
+                                   pi.pi_no,
+                                   p.code  AS product_code,
+                                   p.name  AS product_name,
+                                   w.name  AS warehouse_name,
+                                   r.qty,
+                                   r.price
+                            FROM receipts r
+                            JOIN purchase_invoices pi ON pi.id = r.purchase_invoice_id
+                            JOIN products p ON p.id = r.product_id
+                            JOIN warehouses w ON w.id = r.warehouse_id
+                            ORDER BY r.id DESC");
+        $rows = $st->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $this->view('receipts/index', ['rows' => $rows]);
+    }
     /** Receive multiple lines for a Purchase Invoice (caps to remaining; increments stock; updates avg_cost; writes ledger) */
     public function store(): void {
         require_auth();

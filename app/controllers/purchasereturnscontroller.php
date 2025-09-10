@@ -12,6 +12,19 @@ use function App\Core\redirect;
 
 final class PurchaseReturnsController extends Controller
 {
+    /** List recent purchase returns (debit notes) */
+    public function index(): void {
+        require_auth();
+        $pdo = DB::conn();
+        $st = $pdo->query("SELECT pr.id, pr.pr_no, pr.created_at, pr.purchase_invoice_id, pr.total,
+                                  s.name AS supplier_name, pi.pi_no
+                           FROM purchase_returns pr
+                           JOIN suppliers s ON s.id = pr.supplier_id
+                           JOIN purchase_invoices pi ON pi.id = pr.purchase_invoice_id
+                           ORDER BY pr.id DESC");
+        $rows = $st->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $this->view('purchasereturns/index', ['rows' => $rows]);
+    }
     public function store(): void {
         require_auth();
         if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseinvoices'); }

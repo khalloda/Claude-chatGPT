@@ -212,6 +212,7 @@ $router->post('/purchaseinvoices/create-from-po', 'purchaseinvoicescontroller@cr
 $router->post('/purchaseinvoices/receive', 'purchaseinvoicescontroller@receive');
 
 // receipts (from purchase invoices)
+$router->get('/goodsreceipts', 'receiptscontroller@index');
 $router->post('/receipts', function () {
     // Preserve method for compatibility and log redirect for observability
     \App\Core\Logger::info('Redirecting legacy /receipts to /purchaseinvoices/receive', [
@@ -235,6 +236,7 @@ $router->post('/salesreturns', 'salesreturnscontroller@store');
 $router->get('/salesreturns/print', 'salesreturnscontroller@printnote');
 
 // purchase returns (debit notes)
+$router->get('/purchasereturns', 'purchasereturnscontroller@index');
 $router->post('/purchasereturns', 'purchasereturnscontroller@store');
 $router->get('/purchasereturns/print', 'purchasereturnscontroller@printnote');
 
