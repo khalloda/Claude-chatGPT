@@ -116,9 +116,9 @@ class SessionMigrator
         
         $sessionConfig = [
             'host' => $config['session']['host'] ?? Env::get('REDIS_SESSION_HOST', '127.0.0.1'),
-            'port' => $config['session']['port'] ?? (int)Env::get('REDIS_SESSION_PORT', 6379),
+            'port' => $config['session']['port'] ?? (int)Env::get('REDIS_SESSION_PORT', '6379'),
             'password' => $config['session']['password'] ?? Env::get('REDIS_SESSION_PASSWORD', null),
-            'database' => $config['session']['database'] ?? (int)Env::get('REDIS_SESSION_DATABASE', 1),
+            'database' => $config['session']['database'] ?? (int)Env::get('REDIS_SESSION_DATABASE', '1'),
             'prefix' => $config['session']['prefix'] ?? Env::get('REDIS_SESSION_PREFIX', 'sess:'),
         ];
         

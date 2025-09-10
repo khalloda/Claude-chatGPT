@@ -108,6 +108,16 @@ class Validator
             return $this->customRules[$ruleName]($field, $value, $ruleParameters, $this->data);
         }
 
+        // Normalize numeric parameters for rules that expect numbers
+        if (in_array($ruleName, ['min','max','between'], true)) {
+            foreach ($ruleParameters as $i => $p) {
+                if (is_string($p) && is_numeric($p)) {
+                    // cast to float; validate* methods accept int|float
+                    $ruleParameters[$i] = $p + 0; // numeric cast
+                }
+            }
+        }
+
         // Apply built-in rules
         return match ($ruleName) {
             'required' => $this->validateRequired($field, $value),
@@ -396,9 +406,10 @@ class Validator
     }
 
     /**
-     * Static method to quickly validate data
+     * Static helper to validate arbitrary data
+     * Renamed to avoid clashing with the instance method validate().
      */
-    public static function validate(array $data, array $rules, array $customMessages = []): ValidationResult
+    public static function validateData(array $data, array $rules, array $customMessages = []): ValidationResult
     {
         return self::make($data, $rules, $customMessages)->validate();
     }
@@ -425,7 +436,7 @@ class Validator
             'price.min' => 'Price cannot be negative.',
         ];
 
-        return self::validate($data, $rules, $messages);
+        return self::validateData($data, $rules, $messages);
     }
 
     /**
@@ -440,7 +451,7 @@ class Validator
             'password_confirmation' => ['required', 'confirmed'],
         ];
 
-        return self::validate($data, $rules);
+        return self::validateData($data, $rules);
     }
 
     /**
@@ -455,6 +466,6 @@ class Validator
             'address' => ['nullable', 'string', 'max:500'],
         ];
 
-        return self::validate($data, $rules);
+        return self::validateData($data, $rules);
     }
 }

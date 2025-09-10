@@ -9,8 +9,64 @@ $router = new Router();
 // home + health
 $router->get('/', 'homecontroller@index');
 $router->get('/health', function () {
-    header('Content-Type: text/plain; charset=utf-8');
-    echo 'OK';
+    $status = 'ok';
+    $details = [
+        'timestamp' => date('c'),
+    ];
+
+    // Session backend and health
+    try {
+        $sm = \App\Services\SessionManager::getInstance();
+        // Ensure initialized so handler exists
+        if (!$sm->initialize()) {
+            $status = 'degraded';
+        }
+        $stats = $sm->getStats();
+        $sessionHealth = $sm->healthCheck();
+        $redisTarget = $stats['redis_stats']['config'] ?? null;
+        $details['session'] = [
+            'driver' => $stats['driver'] ?? 'unknown',
+            'initialized' => $stats['initialized'] ?? false,
+            'handler_healthy' => ($sessionHealth['status'] ?? '') === 'healthy',
+            'health' => $sessionHealth,
+            'redis_target' => $redisTarget,
+        ];
+        if (($sessionHealth['status'] ?? '') !== 'healthy') { $status = 'degraded'; }
+    } catch (\Throwable $e) {
+        $status = 'degraded';
+        $details['session_error'] = $e->getMessage();
+    }
+
+    // DB connectivity and latency
+    $dbOk = false; $dbLatency = null; $dbErr = null;
+    try {
+        $start = microtime(true);
+        $pdo = \App\Core\DB::conn();
+        $pdo->query('SELECT 1');
+        $dbLatency = (microtime(true) - $start) * 1000.0;
+        $dbOk = true;
+    } catch (\Throwable $e) {
+        $dbErr = $e->getMessage();
+        $status = 'degraded';
+    }
+    $details['database'] = [
+        'ok' => $dbOk,
+        'latency_ms' => $dbLatency,
+        'error' => $dbErr,
+    ];
+
+    // Redis connectivity (via session handler health when driver is redis)
+    // Already included in session health above. Expose a short view.
+    $details['redis'] = [
+        'enabled' => ($details['session']['driver'] ?? '') === 'redis',
+        'ok' => isset($details['session']['health']['status']) && $details['session']['health']['status'] === 'healthy',
+        'performance_ms' => $details['session']['health']['performance_test'] ?? null,
+        'errors' => $details['session']['health']['errors'] ?? [],
+    ];
+
+    http_response_code($status === 'ok' ? 200 : 207); // 207 Multi-Status for degraded
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['status' => $status, 'details' => $details], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 });
 
 // CSRF token refresh endpoint
@@ -157,7 +213,13 @@ $router->post('/purchaseinvoices/receive', 'purchaseinvoicescontroller@receive')
 
 // receipts (from purchase invoices)
 $router->post('/receipts', function () {
-    // Preserve method for compatibility
+    // Preserve method for compatibility and log redirect for observability
+    \App\Core\Logger::info('Redirecting legacy /receipts to /purchaseinvoices/receive', [
+        'method' => $_SERVER['REQUEST_METHOD'] ?? 'POST',
+        'uri' => $_SERVER['REQUEST_URI'] ?? '/receipts',
+        'referer' => $_SERVER['HTTP_REFERER'] ?? null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+    ]);
     header('Location: /purchaseinvoices/receive', true, 308);
 });
 $router->post('/receipts/delete', 'receiptscontroller@destroy');

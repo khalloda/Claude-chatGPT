@@ -19,7 +19,7 @@ SELECT
     INDEX_TYPE
 FROM information_schema.STATISTICS
 WHERE TABLE_SCHEMA = DATABASE()
-  AND TABLE_NAME IN ('invoices', 'invoice_lines', 'invoice_payments', 'product_stocks', 'customers')
+  AND TABLE_NAME IN ('invoices', 'invoice_items', 'invoice_payments', 'product_stocks', 'customers')
 ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX;
 
 -- ================================================================
@@ -31,7 +31,7 @@ SELECT 'PRE_OPTIMIZATION_ADVANCED_ANALYSIS' as analysis_type;
 -- Test 1: Invoice line items JOIN performance
 EXPLAIN FORMAT=JSON
 SELECT il.*, p.name as product_name, p.code as product_code
-FROM invoice_lines il
+FROM invoice_items il
 JOIN products p ON p.id = il.product_id
 WHERE il.invoice_id IN (1, 2, 3, 4, 5)
 ORDER BY il.invoice_id, p.name;
@@ -94,19 +94,19 @@ SELECT 'CREATING_ADVANCED_INDEXES' as optimization_phase, NOW() as phase_start;
 
 -- Index 1: Invoice lines optimization for JOIN performance
 -- Covers invoice_id and product_id for efficient JOINs
-SELECT 'CREATING_INVOICE_LINES_COMPOSITE_INDEX' as index_action;
-CREATE INDEX IF NOT EXISTS idx_invoice_lines_invoice_product 
-ON invoice_lines(invoice_id, product_id);
+SELECT 'CREATING_INVOICE_ITEMS_COMPOSITE_INDEX' as index_action;
+CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_product 
+ON invoice_items(invoice_id, product_id);
 
 -- Verify index creation
 SELECT 'INDEX_VERIFICATION' as verification_type;
-SHOW INDEX FROM invoice_lines WHERE Key_name = 'idx_invoice_lines_invoice_product';
+SHOW INDEX FROM invoice_items WHERE Key_name = 'idx_invoice_items_invoice_product';
 
 -- Index 2: Invoice payments for payment tracking
 -- Covers invoice_id and payment_date for efficient payment summaries
 SELECT 'CREATING_INVOICE_PAYMENTS_INDEX' as index_action;
 CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice_date 
-ON invoice_payments(invoice_id, payment_date DESC);
+ON invoice_payments(invoice_id, paid_at);
 
 -- Verify index creation
 SHOW INDEX FROM invoice_payments WHERE Key_name = 'idx_invoice_payments_invoice_date';
@@ -272,7 +272,7 @@ SELECT
     ROUND((INDEX_LENGTH/DATA_LENGTH)*100, 2) as index_ratio_percent
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = DATABASE()
-  AND TABLE_NAME IN ('products', 'invoices', 'invoice_lines', 'customers', 'product_stocks', 'invoice_payments')
+  AND TABLE_NAME IN ('products', 'invoices', 'invoice_items', 'customers', 'product_stocks', 'invoice_payments')
 ORDER BY DATA_LENGTH DESC;
 
 -- ================================================================
@@ -292,7 +292,7 @@ BEGIN
         FROM information_schema.TABLES 
         WHERE TABLE_SCHEMA = DATABASE() 
           AND ENGINE = 'InnoDB'
-          AND TABLE_NAME IN ('products', 'invoices', 'invoice_lines', 'customers', 'product_stocks', 'invoice_payments');
+          AND TABLE_NAME IN ('products', 'invoices', 'invoice_items', 'customers', 'product_stocks', 'invoice_payments');
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
     
     -- Log optimization start
@@ -323,7 +323,7 @@ BEGIN
     CLOSE cur;
     
     -- Update table statistics
-    ANALYZE TABLE products, invoices, invoice_lines, customers, product_stocks, invoice_payments;
+    ANALYZE TABLE products, invoices, invoice_items, customers, product_stocks, invoice_payments;
     
     -- Log optimization completion
     INSERT INTO optimization_log (event_type, message, created_at) 

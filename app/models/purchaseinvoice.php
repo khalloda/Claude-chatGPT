@@ -7,12 +7,15 @@ use PDO;
 final class PurchaseInvoice
 {
     public static function nextNumber(): string {
+        // Format: PIYYYY-####  (e.g., PI2025-0006)
+        // Extract numeric suffix correctly using SUBSTRING_INDEX (part after last '-')
         $y = date('Y');
-        $st = DB::conn()->prepare("SELECT LPAD(COALESCE(MAX(CAST(SUBSTRING(pi_no,6) AS UNSIGNED)),0)+1,4,'0')
-                                   FROM purchase_invoices WHERE pi_no LIKE CONCAT('PI',$y,'-%')");
-        $st->execute();
+        $sql = "SELECT LPAD(COALESCE(MAX(CAST(SUBSTRING_INDEX(pi_no,'-',-1) AS UNSIGNED)),0)+1,4,'0')
+                FROM purchase_invoices WHERE pi_no LIKE CONCAT('PI', ?, '-%')";
+        $st = DB::conn()->prepare($sql);
+        $st->execute([$y]);
         $seq = (string)($st->fetchColumn() ?: '0001');
-        return 'PI'.$y.'-'.$seq;
+        return 'PI' . $y . '-' . $seq;
     }
 
     public static function all(): array {

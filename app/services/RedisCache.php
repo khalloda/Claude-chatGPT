@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Redis;
 use Exception;
 use App\Core\Logger;
 
@@ -14,7 +13,7 @@ use App\Core\Logger;
  */
 final class RedisCache
 {
-    private static ?Redis $redis = null;
+    private static ?object $redis = null; // Redis instance when available
     private static bool $connected = false;
     private static array $config = [
         'host' => '127.0.0.1',
@@ -26,7 +25,7 @@ final class RedisCache
         'retry_interval' => 100,
         'read_timeout' => 2.0,
         'persistent' => true,
-        'serializer' => Redis::SERIALIZER_JSON
+        'serializer' => 'json'
     ];
     private static array $stats = [
         'hits' => 0,
@@ -48,7 +47,11 @@ final class RedisCache
         }
         
         try {
-            self::$redis = new Redis();
+            if (!class_exists('Redis')) {
+                Logger::warning('Redis extension not available; RedisCache disabled');
+                return false;
+            }
+            self::$redis = new \Redis();
             
             // Use persistent connection for better performance
             if (self::$config['persistent']) {
@@ -96,13 +99,24 @@ final class RedisCache
             }
             
             // Set serialization mode
-            if (!self::$redis->setOption(Redis::OPT_SERIALIZER, self::$config['serializer'])) {
+            // Map serializer if string
+            $serializer = self::$config['serializer'];
+            if (is_string($serializer)) {
+                $map = [
+                    'php' => \Redis::SERIALIZER_PHP,
+                    'json' => defined('Redis::SERIALIZER_JSON') ? \Redis::SERIALIZER_JSON : \Redis::SERIALIZER_PHP,
+                    'igbinary' => defined('Redis::SERIALIZER_IGBINARY') ? \Redis::SERIALIZER_IGBINARY : \Redis::SERIALIZER_PHP,
+                    'msgpack' => defined('Redis::SERIALIZER_MSGPACK') ? \Redis::SERIALIZER_MSGPACK : \Redis::SERIALIZER_PHP,
+                ];
+                $serializer = $map[strtolower($serializer)] ?? \Redis::SERIALIZER_PHP;
+            }
+            if (!self::$redis->setOption(\Redis::OPT_SERIALIZER, (int)$serializer)) {
                 Logger::warning('Redis serializer configuration failed');
             }
             
             // Set key prefix
             if (!empty(self::$config['prefix'])) {
-                if (!self::$redis->setOption(Redis::OPT_PREFIX, self::$config['prefix'])) {
+                if (!self::$redis->setOption(\Redis::OPT_PREFIX, self::$config['prefix'])) {
                     Logger::warning('Redis prefix configuration failed');
                 }
             }

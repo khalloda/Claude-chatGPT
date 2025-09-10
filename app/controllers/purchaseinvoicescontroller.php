@@ -72,16 +72,26 @@ final class PurchaseInvoicesController extends Controller
         $pdo = DB::conn(); 
 		$pdo->beginTransaction();
         try {
-			            // Build PI number based on PO number
-            $piNo = PurchaseInvoice::nextNumber();
+            // Generate a unique PI number with a small retry loop in case of race
             $ins = $pdo->prepare("INSERT INTO purchase_invoices
                 (pi_no, purchase_order_id, supplier_id, subtotal, tax_rate, tax_amount, total, status, created_at)
                 VALUES (?,?,?,?,?,?,?, 'unpaid', NOW())");
-            $ins->execute([
-                $piNo, $poId, (int)$po['supplier_id'], (float)$po['subtotal'],
-                (float)$po['tax_rate'], (float)$po['tax_amount'], (float)$po['total']
-            ]);
-            $piId = (int)$pdo->lastInsertId();
+            $attempts = 0; $piId = 0; $piNo = '';
+            do {
+                $piNo = PurchaseInvoice::nextNumber();
+                try {
+                    $ins->execute([
+                        $piNo, $poId, (int)$po['supplier_id'], (float)$po['subtotal'],
+                        (float)$po['tax_rate'], (float)$po['tax_amount'], (float)$po['total']
+                    ]);
+                    $piId = (int)$pdo->lastInsertId();
+                    break;
+                } catch (\PDOException $e) {
+                    // 1062 duplicate key – try again up to 5 times
+                    if ($e->errorInfo[1] !== 1062 || ++$attempts >= 5) { throw $e; }
+                    usleep(50000); // 50ms backoff
+                }
+            } while ($attempts < 5);
 
             $pdo->commit();
             flash_set('success', 'Purchase invoice '.$piNo.' created.');

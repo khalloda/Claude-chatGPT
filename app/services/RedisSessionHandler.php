@@ -67,6 +67,10 @@ class RedisSessionHandler implements SessionHandlerInterface
         }
         
         try {
+            // Ensure Redis extension is available
+            if (!class_exists('Redis')) {
+                throw new Exception('PHP Redis extension not installed');
+            }
             $this->redis = new \Redis();
             
             // Use persistent connection for better performance
@@ -101,8 +105,18 @@ class RedisSessionHandler implements SessionHandlerInterface
                 throw new Exception('Failed to select Redis database');
             }
             
-            // Set serialization mode for PHP sessions
-            $this->redis->setOption(\Redis::OPT_SERIALIZER, $this->config['serializer']);
+            // Set serialization mode for PHP sessions (accepts string or int)
+            $serializer = $this->config['serializer'] ?? 'php';
+            if (is_string($serializer)) {
+                $map = [
+                    'php' => \Redis::SERIALIZER_PHP,
+                    'json' => defined('Redis::SERIALIZER_JSON') ? \Redis::SERIALIZER_JSON : \Redis::SERIALIZER_PHP,
+                    'igbinary' => defined('Redis::SERIALIZER_IGBINARY') ? \Redis::SERIALIZER_IGBINARY : \Redis::SERIALIZER_PHP,
+                    'msgpack' => defined('Redis::SERIALIZER_MSGPACK') ? \Redis::SERIALIZER_MSGPACK : \Redis::SERIALIZER_PHP,
+                ];
+                $serializer = $map[strtolower($serializer)] ?? \Redis::SERIALIZER_PHP;
+            }
+            $this->redis->setOption(\Redis::OPT_SERIALIZER, (int)$serializer);
             
             // Set key prefix if configured
             if (!empty($this->keyPrefix)) {

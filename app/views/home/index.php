@@ -33,7 +33,21 @@ $db_error = $db_error ?? '';
 ?>
 
 <div class="page-header">
-  <div class="title"><?= $T('nav.dashboard','Dashboard') ?></div>
+  <div class="title d-flex align-items-center gap-2">
+    <?= $T('nav.dashboard','Dashboard') ?>
+    <?php 
+      $driver = $session_driver ?? 'unknown';
+      $latMs = isset($db_latency_ms) && is_numeric($db_latency_ms) ? round((float)$db_latency_ms) : null;
+    ?>
+    <span class="chip chip-secondary" title="Session backend">
+      <span class="dot"></span>Session: <?= $h($driver) ?>
+    </span>
+    <?php if ($latMs !== null): ?>
+      <span class="chip chip-secondary" title="DB latency (ms)">
+        <span class="dot"></span>DB: <?= $h((string)$latMs) ?> ms
+      </span>
+    <?php endif; ?>
+  </div>
   <nav aria-label="breadcrumb" class="ms-auto">
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item active" aria-current="page"><?= $T('nav.dashboard','Dashboard') ?></li>

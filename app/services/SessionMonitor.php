@@ -50,13 +50,13 @@ class SessionMonitor
             'enabled' => Env::get('SESSION_MONITORING_ENABLED', 'true') === 'true',
             'log_level' => Env::get('SESSION_MONITORING_LOG_LEVEL', 'info'),
             'alert_thresholds' => [
-                'high_memory_usage' => (float)Env::get('SESSION_ALERT_MEMORY_THRESHOLD', 0.8),
-                'slow_operation' => (float)Env::get('SESSION_ALERT_SLOW_THRESHOLD', 1.0), // seconds
-                'error_rate' => (float)Env::get('SESSION_ALERT_ERROR_RATE', 0.1), // 10%
-                'concurrent_sessions' => (int)Env::get('SESSION_ALERT_CONCURRENT_LIMIT', 1000)
+                'high_memory_usage' => (float)Env::get('SESSION_ALERT_MEMORY_THRESHOLD', '0.8'),
+                'slow_operation' => (float)Env::get('SESSION_ALERT_SLOW_THRESHOLD', '1.0'), // seconds
+                'error_rate' => (float)Env::get('SESSION_ALERT_ERROR_RATE', '0.1'), // 10%
+                'concurrent_sessions' => (int)Env::get('SESSION_ALERT_CONCURRENT_LIMIT', '1000')
             ],
-            'retention_period' => (int)Env::get('SESSION_METRICS_RETENTION', 86400), // 24 hours
-            'sample_rate' => (float)Env::get('SESSION_MONITORING_SAMPLE_RATE', 1.0) // 100%
+            'retention_period' => (int)Env::get('SESSION_METRICS_RETENTION', '86400'), // 24 hours
+            'sample_rate' => (float)Env::get('SESSION_MONITORING_SAMPLE_RATE', '1.0') // 100%
         ];
     }
     

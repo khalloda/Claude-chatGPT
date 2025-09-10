@@ -64,6 +64,9 @@ function activity_log(string $action, string $entity_type, int $entity_id, array
 /** CSRF utilities */
 function csrf_token(): string
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     if (empty($_SESSION['csrf'])) {
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
         $_SESSION['csrf_created'] = time();
@@ -78,11 +81,17 @@ function csrf_field(): string
 
 function verify_csrf_post(): bool
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     return isset($_POST['_token'], $_SESSION['csrf']) && hash_equals($_SESSION['csrf'], (string)$_POST['_token']);
 }
 
 function verify_csrf_header(): bool
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     return isset($_SESSION['csrf']) && $token !== '' && hash_equals($_SESSION['csrf'], $token);
 }
@@ -95,12 +104,18 @@ function verify_csrf_request(): bool
 
 function regenerate_csrf_token(): string
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
     return $_SESSION['csrf'];
 }
 
 function csrf_token_expired(): bool
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     // Check if token was created more than 2 hours ago
     $tokenTime = $_SESSION['csrf_created'] ?? 0;
     return (time() - $tokenTime) > 7200; // 2 hours
@@ -108,6 +123,9 @@ function csrf_token_expired(): bool
 
 function refresh_csrf_if_needed(): void
 {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        @session_start();
+    }
     if (csrf_token_expired() || empty($_SESSION['csrf'])) {
         regenerate_csrf_token();
         $_SESSION['csrf_created'] = time();

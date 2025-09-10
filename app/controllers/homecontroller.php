@@ -5,6 +5,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\DB;               // <- this project uses DB::conn()
+use App\Services\SessionManager;
 use PDO;
 
 final class HomeController extends Controller
@@ -16,8 +17,11 @@ final class HomeController extends Controller
         // Connectivity probe
         $db_ok = true;
         $db_error = '';
+        $db_latency_ms = null;
         try {
+            $start = microtime(true);
             $pdo->query('SELECT 1');
+            $db_latency_ms = (microtime(true) - $start) * 1000.0;
         } catch (\Throwable $e) {
             $db_ok = false;
             $db_error = $e->getMessage();
@@ -118,6 +122,16 @@ final class HomeController extends Controller
                                  FROM invoices ORDER BY created_at DESC LIMIT 5")
                         ->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        $this->view('home/index', compact('kpi', 'db_ok', 'db_error', 'quotes', 'orders', 'invoices'));
+        // Session backend
+        $session_driver = 'unknown';
+        try {
+            $sm = SessionManager::getInstance();
+            $stats = $sm->getStats();
+            $session_driver = $stats['driver'] ?? 'unknown';
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        $this->view('home/index', compact('kpi', 'db_ok', 'db_error', 'db_latency_ms', 'session_driver', 'quotes', 'orders', 'invoices'));
     }
 }

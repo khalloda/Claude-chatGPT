@@ -17,7 +17,9 @@ return [
         'retry_interval' => (int)($_ENV['REDIS_RETRY_INTERVAL'] ?? 100),
         'read_timeout' => (float)($_ENV['REDIS_READ_TIMEOUT'] ?? 2.0),
         'persistent' => filter_var($_ENV['REDIS_PERSISTENT'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
-        'serializer' => Redis::SERIALIZER_JSON,
+        // Use string identifiers to avoid hard dependency on ext-redis at config load
+        // Mapped at runtime in RedisSessionHandler
+        'serializer' => $_ENV['REDIS_SERIALIZER'] ?? 'json',
     ],
     
     'session' => [
@@ -30,7 +32,7 @@ return [
         'retry_interval' => (int)($_ENV['REDIS_SESSION_RETRY_INTERVAL'] ?? 100),
         'read_timeout' => (float)($_ENV['REDIS_SESSION_READ_TIMEOUT'] ?? 2.0),
         'persistent' => filter_var($_ENV['REDIS_SESSION_PERSISTENT'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
-        'serializer' => Redis::SERIALIZER_PHP,
+        'serializer' => $_ENV['REDIS_SESSION_SERIALIZER'] ?? 'php',
     ],
     
     'queue' => [

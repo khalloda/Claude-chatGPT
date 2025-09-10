@@ -1,0 +1,54 @@
+name: Migrations Check
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: chatgpt2_mi
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql
+      - name: Wait for MySQL
+        run: |
+          for i in `seq 1 30`; do
+            (echo > /dev/tcp/127.0.0.1/3306) && break
+            sleep 1
+          done
+      - name: Prepare CI .env
+        run: |
+          cat > config/.env <<'ENV'
+          APP_ENV=ci
+          APP_DEBUG=false
+          APP_URL=http://localhost
+          APP_TIMEZONE=UTC
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_NAME=chatgpt2_mi
+          DB_USER=root
+          DB_PASS=root
+          SESSION_DRIVER=files
+          ENV
+      - name: Import baseline schema (live dump)
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot chatgpt2_mi < chatgpt2_mi_2025-09-03_14-27-44.sql
+      - name: Dry-run migrations
+        run: php scripts/migrate.php --dry-run

@@ -1,0 +1,50 @@
+# ------------------------------------------------------------------------------
+# Enable Rewrite Engine (front controller)
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # If the request is for an existing file or directory, serve it
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Otherwise route everything to index.php (front controller)
+  RewriteRule ^ index.php [L]     # Use [END] if available on your Apache build
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Cache: only /assets gets a 1-year immutable Cache-Control
+# ------------------------------------------------------------------------------
+
+# Flag requests under /assets so we can target headers/expires precisely
+<IfModule mod_setenvif.c>
+  SetEnvIfExpr "%{REQUEST_URI} =~ m#^/assets/#" IS_ASSET=1
+</IfModule>
+
+# Expires headers (Apache mod_expires)
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Only for /assets/*
+  <If "%{env:IS_ASSET} == '1'">
+    # blanket 1 year on anything served from /assets (static bundle)
+    ExpiresDefault "access plus 1 year"
+  </If>
+</IfModule>
+
+# Cache-Control (Apache mod_headers)
+<IfModule mod_headers.c>
+  # Add "immutable" 1-year cache *only* for /assets/*
+  Header merge Cache-Control "public"                              env=IS_ASSET
+  Header merge Cache-Control "max-age=31536000, immutable"         env=IS_ASSET
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Security headers (baseline)
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "no-referrer-when-downgrade"
+</IfModule>
