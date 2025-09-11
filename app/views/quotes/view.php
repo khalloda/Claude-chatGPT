@@ -5,9 +5,12 @@ use function App\Core\csrf_field;
 <section>
   <h2>Quote <?= htmlspecialchars($q['quote_no'], ENT_QUOTES, 'UTF-8') ?></h2>
   <p>Status: <strong><?= htmlspecialchars($q['status'], ENT_QUOTES, 'UTF-8') ?></strong></p>
-  <p>Subtotal: <?= number_format((float)$q['subtotal'],2) ?> |
-     Tax (<?= number_format((float)$q['tax_rate'],2) ?>%): <?= number_format((float)$q['tax_amount'],2) ?> |
-     Total: <strong><?= number_format((float)$q['total'],2) ?></strong></p>
+  <?php $S = $summary ?? ['subtotal'=>$q['subtotal']??0,'tax_rate'=>$q['tax_rate']??0,'tax_amount'=>$q['tax_amount']??0,'total'=>$q['total']??0]; ?>
+  <div style="display:flex; gap:20px; align-items:center; margin:6px 0;">
+    <div>Subtotal: <strong><?= number_format((float)$S['subtotal'],2) ?></strong></div>
+    <div>Tax (<?= number_format((float)$S['tax_rate'],2) ?>%): <strong><?= number_format((float)$S['tax_amount'],2) ?></strong></div>
+    <div>Total: <strong><?= number_format((float)$S['total'],2) ?></strong></div>
+  </div>
   <?php if (!empty($q['expires_at'])): ?><p>Expires at: <?= htmlspecialchars($q['expires_at'], ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
 
   <table style="width:100%;border-collapse:collapse;margin-top:10px;">

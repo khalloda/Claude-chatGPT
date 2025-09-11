@@ -172,10 +172,21 @@ final class QuotesController extends Controller
         $can_expire    = ($status !== 'expired');
 
         $items = Quote::items($id);
+        // Derive totals defensively in case persisted totals are missing/zero
+        $computedSubtotal = 0.0;
+        foreach ($items as $it) { $computedSubtotal += (float)($it['line_total'] ?? 0); }
+        $storedSubtotal = (float)($q['subtotal'] ?? 0);
+        $taxRate = (float)($q['tax_rate'] ?? 0);
+        $subtotal = $storedSubtotal > 0 ? $storedSubtotal : $computedSubtotal;
+        $storedTax = (float)($q['tax_amount'] ?? 0);
+        $taxAmount = $storedTax > 0 ? $storedTax : round($subtotal * ($taxRate/100), 2);
+        $storedTotal = (float)($q['total'] ?? 0);
+        $total = $storedTotal > 0 ? $storedTotal : ($subtotal + $taxAmount);
 
         $this->view('quotes/view', [
             'q'             => $q,
             'items'         => $items,
+            'summary'       => ['subtotal'=>$subtotal,'tax_rate'=>$taxRate,'tax_amount'=>$taxAmount,'total'=>$total],
             'notes'         => Note::for('quote', $id),
             'can_mark_sent' => $can_mark_sent,
             'can_convert'   => $can_convert,
@@ -352,11 +363,18 @@ public function createorder(): void {
         $q  = Quote::find($id);
         if (!$q) { flash_set('error','Quote not found.'); redirect('/quotes'); }
         $items = Quote::items($id);
+        // Derive totals defensively
+        $computedSubtotal = 0.0; foreach ($items as $it) { $computedSubtotal += (float)($it['line_total'] ?? 0); }
+        $taxRate = (float)($q['tax_rate'] ?? 0);
+        $subtotal = max((float)($q['subtotal'] ?? 0), $computedSubtotal);
+        $taxAmount = max((float)($q['tax_amount'] ?? 0), round($subtotal * ($taxRate/100), 2));
+        $total = max((float)($q['total'] ?? 0), $subtotal + $taxAmount);
         $include = isset($_GET['include_notes']) && $_GET['include_notes'] === '1';
         $publicNotes = $include ? Note::publicFor('quote', $id) : [];
         $this->view_raw('quotes/print', [
             'q' => $q,
             'items' => $items,
+            'summary' => ['subtotal'=>$subtotal,'tax_rate'=>$taxRate,'tax_amount'=>$taxAmount,'total'=>$total],
             'public_notes' => $publicNotes,
             'include_notes' => $include,
         ]);

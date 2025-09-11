@@ -79,3 +79,29 @@ Related Issues: TODO
 - Related Tests:
   - E2E: Select product+warehouse and assert Available > 0 for known stocked items; verify row highlight when exceeding available.
   - Integration: Hit `/stock/available?product_id=2&warehouse_id=1` while authenticated and assert JSON `{available: >0}`.
+- ### ISSUE-0004: Quote tax not showing in view/print
+
+- Issue ID & Title: ISSUE-0004 — Quote tax not showing in view/print
+- Description: After creating a quote with a non-zero Tax %, the quote view/print shows tax as zero or not visible.
+- Reproduction Steps:
+  - Create a quote with `Tax % = 10` and at least one item.
+  - Open quote view and print page.
+  - Observed: tax not displayed correctly.
+- Suspected Location:
+  - `app/controllers/quotescontroller.php` (show/printpage totals preparation)
+  - `app/views/quotes/view.php` and `app/views/quotes/print.php` (totals rendering)
+- Severity: Minor
+- Status: Needs Verification
+- Root Cause Analysis:
+  - Totals were rendered directly from persisted columns. In edge cases where totals were not persisted or zero, rendering displayed zeros.
+  - Visibility/UX: Totals were inline text; easier to miss.
+- Proposed Fix:
+  - Compute derived totals in controller from line items when persisted totals are zero/missing, then pass a `summary` array to views.
+  - Update both view and print templates to use `summary` and render a clear 3-row totals block.
+- Implemented Fix:
+  - Controller: Added defensive computation in `QuotesController::show()` and `printpage()`.
+  - View: Updated `app/views/quotes/view.php` and `app/views/quotes/print.php` to show prominent totals using derived `summary`.
+- Database/Migration Impact: None (read-only computation against `quote_items`). Baseline `chatgpt2_mi.sql` unchanged.
+- Related Tests:
+  - Integration: Create a quote with `Tax %=10` and verify view/print show correct tax/total even if DB totals are zero.
+  - Unit (optional): Helper to compute totals from a list of line items.

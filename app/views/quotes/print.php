@@ -78,11 +78,21 @@ use function App\Core\format_note_html;
     </tbody>
   </table>
 
-  <p class="r" style="text-align:right;margin-top:8px;">
-    Subtotal: <?= number_format((float)$q['subtotal'],2) ?>
-    &nbsp;|&nbsp; Tax (<?= number_format((float)$q['tax_rate'],2) ?>%): <?= number_format((float)$q['tax_amount'],2) ?>
-    &nbsp;|&nbsp; <strong>Total: <?= number_format((float)$q['total'],2) ?></strong>
-  </p>
+  <?php $S = $summary ?? ['subtotal'=>$q['subtotal']??0,'tax_rate'=>$q['tax_rate']??0,'tax_amount'=>$q['tax_amount']??0,'total'=>$q['total']??0]; ?>
+  <table style="width:40%; margin-left:auto; margin-top:10px; border-collapse:collapse;">
+    <tr>
+      <td style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Subtotal</td>
+      <td style="text-align:right;padding:6px;border-bottom:1px solid #eee;"><?= number_format((float)$S['subtotal'],2) ?></td>
+    </tr>
+    <tr>
+      <td style="text-align:right;padding:6px;border-bottom:1px solid #eee;">Tax (<?= number_format((float)$S['tax_rate'],2) ?>%)</td>
+      <td style="text-align:right;padding:6px;border-bottom:1px solid #eee;"><?= number_format((float)$S['tax_amount'],2) ?></td>
+    </tr>
+    <tr>
+      <td style="text-align:right;padding:6px;font-weight:bold;">Total</td>
+      <td style="text-align:right;padding:6px;font-weight:bold;"><?= number_format((float)$S['total'],2) ?></td>
+    </tr>
+  </table>
 
   <?php if (!empty($public_notes) && $include_notes): ?>
     <section style="margin-top:16px;">
