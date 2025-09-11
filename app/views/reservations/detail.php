@@ -4,6 +4,7 @@ use function App\Core\base_url;
 ?>
 <section>
   <h2>Reservation Details — <?= htmlspecialchars(ucfirst($scope),ENT_QUOTES,'UTF-8') ?></h2>
+  <p><a class="no-print" href="<?= base_url('/reservations/print-detail?scope='.(isset($scope)?urlencode($scope):'').'&id='.(int)($doc['id'] ?? 0)) ?>">Print</a></p>
   <?php if ($scope==='quote'): ?>
     <div>Quote: <a href="<?= base_url('/quotes/show?id='.(int)$doc['id']) ?>"><?= htmlspecialchars($doc['quote_no'] ?? '',ENT_QUOTES,'UTF-8') ?></a></div>
     <div>Customer: <?= htmlspecialchars($doc['customer_name'] ?? '',ENT_QUOTES,'UTF-8') ?></div>
@@ -41,4 +42,3 @@ use function App\Core\base_url;
   </table>
   <p style="margin-top:10px;"><a href="<?= base_url('/reservations') ?>">Back to Reservations</a></p>
 </section>
-

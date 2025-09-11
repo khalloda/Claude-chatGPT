@@ -23,6 +23,15 @@ use function App\Core\base_url;
     <input type="date" name="from" value="<?= htmlspecialchars($filters['from'] ?? '',ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
     <input type="date" name="to"   value="<?= htmlspecialchars($filters['to'] ?? '',ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
     <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;">Apply</button>
+    <?php
+      $params=[];
+      if (!empty($filters['customer_id'])) $params['customer_id']=(int)$filters['customer_id'];
+      if (!empty($filters['scope']))       $params['scope']=$filters['scope'];
+      if (!empty($filters['from']))        $params['from']=$filters['from'];
+      if (!empty($filters['to']))          $params['to']=$filters['to'];
+      $qs = http_build_query($params);
+    ?>
+    <a href="<?= base_url('/reservations/print'.($qs?'?'.$qs:'')) ?>" class="no-print" style="align-self:center;margin-left:auto;">Print</a>
   </form>
 
   <table style="width:100%;border-collapse:collapse;margin-top:10px;">
