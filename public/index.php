@@ -155,6 +155,7 @@ $router->post('/quotes/cancel', 'quotescontroller@cancel');
 $router->post('/quotes/markexpired', 'quotescontroller@markexpired');
 $router->post('/quotes/createorder', 'quotescontroller@createorder');
 $router->post('/quotes/marksent', 'quotescontroller@marksent');
+$router->post('/quotes/delete', 'quotescontroller@destroy');
 
 // orders
 $router->get('/orders', 'orderscontroller@index');
@@ -203,6 +204,7 @@ $router->get('/purchaseorders/show', 'purchaseorderscontroller@show');
 $router->post('/purchaseorders/mark-ordered', 'purchaseorderscontroller@markordered');
 $router->get('/purchaseorders/print', 'purchaseorderscontroller@printpage');
 $router->post('/purchaseorders/close', 'purchaseorderscontroller@markclosed');
+$router->post('/purchaseorders/delete', 'purchaseorderscontroller@destroy');
 
 // purchase invoices
 $router->get('/purchaseinvoices', 'purchaseinvoicescontroller@index');
@@ -223,6 +225,9 @@ $router->post('/receipts', function () {
     ]);
     header('Location: /purchaseinvoices/receive', true, 308);
 });
+
+// stock availability (for live UI)
+$router->get('/stock/available', 'stockcontroller@available');
 $router->post('/receipts/delete', 'receiptscontroller@destroy');
 $router->get('/receipts/print', 'receiptscontroller@printgrn');
 

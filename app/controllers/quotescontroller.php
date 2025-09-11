@@ -60,6 +60,52 @@ final class QuotesController extends Controller
             $taxRate    = (float)($_POST['tax_rate'] ?? 0);
             $expiresAt  = trim((string)($_POST['expires_at'] ?? '')) ?: null;
 
+            // Validate requested quantities against available stock per warehouse
+            // Aggregate quantities for same (product_id, warehouse_id)
+            $demands = [];
+            foreach ($items as $r) {
+                $pid = (int)$r['product_id'];
+                $wid = (int)$r['warehouse_id'];
+                $qty = max(1, (int)$r['qty']);
+                $key = $pid.'@'.$wid;
+                $demands[$key] = ($demands[$key] ?? ['pid'=>$pid,'wid'=>$wid,'qty'=>0]);
+                $demands[$key]['qty'] += $qty;
+            }
+
+            // Check availability: available = GREATEST(qty_on_hand - qty_reserved, 0)
+            $violations = [];
+            $check = $pdo->prepare("\n                SELECT p.code, p.name AS product_name, w.name AS warehouse_name,\n                       COALESCE(ps.qty_on_hand,0) AS qty_on_hand,\n                       COALESCE(ps.qty_reserved,0) AS qty_reserved\n                  FROM products p\n                  CROSS JOIN warehouses w\n                  LEFT JOIN product_stocks ps\n                    ON ps.product_id = p.id AND ps.warehouse_id = w.id\n                 WHERE p.id = ? AND w.id = ?\n                 LIMIT 1\n            ");
+            foreach ($demands as $d) {
+                $check->execute([$d['pid'], $d['wid']]);
+                $row = $check->fetch(\PDO::FETCH_ASSOC) ?: null;
+                $on  = (int)($row['qty_on_hand'] ?? 0);
+                $res = (int)($row['qty_reserved'] ?? 0);
+                $available = max(0, $on - $res);
+                if ($d['qty'] > $available) {
+                    $violations[] = [
+                        'product_id'    => $d['pid'],
+                        'warehouse_id'  => $d['wid'],
+                        'product_code'  => (string)($row['code'] ?? ''),
+                        'product_name'  => (string)($row['product_name'] ?? ''),
+                        'warehouse_name'=> (string)($row['warehouse_name'] ?? ''),
+                        'requested'     => $d['qty'],
+                        'available'     => $available,
+                    ];
+                }
+            }
+
+            if ($violations) {
+                // Build a concise error message
+                $parts = [];
+                foreach ($violations as $v) {
+                    $labelP = trim(($v['product_code'] ? ($v['product_code'].' ') : '').$v['product_name']);
+                    $labelP = $labelP !== '' ? $labelP : ('Product #'.$v['product_id']);
+                    $labelW = $v['warehouse_name'] !== '' ? $v['warehouse_name'] : ('Warehouse #'.$v['warehouse_id']);
+                    $parts[] = sprintf('%s in %s: requested %d, available %d', $labelP, $labelW, $v['requested'], $v['available']);
+                }
+                throw new \RuntimeException('Insufficient stock for: '.implode('; ', $parts));
+            }
+
             $subtotal = 0.0;
             foreach ($items as &$it) {
                 $it['qty']        = max(1, (int)$it['qty']);
@@ -266,6 +312,37 @@ public function createorder(): void {
         DB::conn()->prepare("UPDATE quotes SET status='expired' WHERE id=?")->execute([$id]);
         flash_set('success','Quote marked as expired.');
         redirect('/quotes/show?id='.$id);
+    }
+
+    /** POST /quotes/delete — delete only if status is draft */
+    public function destroy(): void {
+        require_auth();
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/quotes'); }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $q  = Quote::find($id);
+        if (!$q) { flash_set('error','Quote not found.'); redirect('/quotes'); }
+        if (($q['status'] ?? '') !== 'draft') {
+            flash_set('error','Only draft quotes can be deleted.');
+            redirect('/quotes/show?id='.$id);
+        }
+
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            // quote_items are ON DELETE CASCADE via fk_qi_quote
+            $del = $pdo->prepare('DELETE FROM quotes WHERE id=?');
+            $del->execute([$id]);
+            // Clean up associated notes (soft relationship)
+            $pdo->prepare('DELETE FROM notes WHERE entity_type=\'quote\' AND entity_id=?')->execute([$id]);
+            $pdo->commit();
+            \App\Core\flash_set('success','Quote deleted.');
+            \App\Core\redirect('/quotes');
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            \App\Core\flash_set('error','Delete failed: '.$e->getMessage());
+            \App\Core\redirect('/quotes/show?id='.$id);
+        }
     }
 
     /** Print */

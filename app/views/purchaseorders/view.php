@@ -21,6 +21,11 @@ use function App\Core\csrf_field;
       <input type="hidden" name="id" value="<?= (int)$po['id'] ?>">
       <button type="submit" style="padding:6px 10px;border:1px solid #111;border-radius:8px;background:#111;color:#fff;cursor:pointer;">Mark as Ordered</button>
     </form>
+    <form method="post" action="<?= base_url('/purchaseorders/delete') ?>" style="margin:8px 8px;" onsubmit="return confirm('Delete this draft purchase order?');">
+      <?= csrf_field() ?>
+      <input type="hidden" name="id" value="<?= (int)$po['id'] ?>">
+      <button type="submit" style="padding:6px 10px;border:1px solid #c00;border-radius:8px;background:#fff;color:#c00;cursor:pointer;">Delete</button>
+    </form>
   <?php endif; ?>
 
   <?php if (($po['status'] ?? '')==='received'): ?>

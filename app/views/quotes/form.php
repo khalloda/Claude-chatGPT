@@ -45,6 +45,7 @@ use function App\Core\csrf_field;
         <tr>
           <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Product</th>
           <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Warehouse</th>
+          <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Available</th>
           <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Qty</th>
           <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Unit Price</th>
           <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Line Total</th>
@@ -71,6 +72,10 @@ use function App\Core\csrf_field;
                   <option value="<?= (int)$w['id'] ?>"><?= htmlspecialchars($w['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></option>
                 <?php endforeach; ?>
               </select>
+            </td>
+            <td style="padding:6px;text-align:right;">
+              <input type="text" class="available-display" value="-"
+                     style="width:110px;padding:8px;border:1px solid #eee;background:#fafafa;border-radius:6px;text-align:right;" readonly>
             </td>
             <td style="padding:6px;text-align:right;">
               <input type="number" min="0" name="qty[]" value="0"
@@ -107,6 +112,31 @@ use function App\Core\csrf_field;
   <script>
   (function () {
     const rows = document.getElementById('rows');
+    const baseStockUrl = '<?= base_url('/stock/available') ?>';
+    const cache = new Map(); // key: pid@wid -> {available, ts}
+
+    // simple visual helpers for the Available cell
+    function setAvailLoading(el) {
+      if (!el) return;
+      el.value = '⏳';
+      el.style.backgroundColor = '#fff7e6'; // light amber
+      el.style.borderColor = '#facc15';
+      el.style.color = '#7a5b00';
+    }
+    function setAvailValue(el, v) {
+      if (!el) return;
+      el.value = String(v);
+      el.style.backgroundColor = '#fafafa';
+      el.style.borderColor = '#eee';
+      el.style.color = '#111';
+    }
+    function setAvailError(el) {
+      if (!el) return;
+      el.value = 'ERR';
+      el.style.backgroundColor = '#fde2e2'; // light red
+      el.style.borderColor = '#fca5a5';
+      el.style.color = '#7f1d1d';
+    }
 
     function toNum(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
 
@@ -129,6 +159,54 @@ use function App\Core\csrf_field;
       if ($('grandtotal')) $('grandtotal').textContent = gt.toFixed(2);
     }
 
+    function updateRowHighlight(tr) {
+      const qty = toNum(tr.querySelector('input[name="qty[]"]').value);
+      const availEl = tr.querySelector('.available-display');
+      const available = toNum(availEl && availEl.value || '0');
+      if (availEl && !isNaN(available) && qty > available) {
+        tr.style.outline = '2px solid #fca5a5'; // red-200
+        tr.style.backgroundColor = '#fff7f7';
+      } else {
+        tr.style.outline = '';
+        tr.style.backgroundColor = '';
+      }
+    }
+
+    async function fetchAvailable(pid, wid) {
+      const key = pid + '@' + wid;
+      if (cache.has(key)) return cache.get(key);
+      const url = baseStockUrl + '?product_id=' + encodeURIComponent(pid) + '&warehouse_id=' + encodeURIComponent(wid) + '&_=' + Date.now();
+      try {
+        const res = await fetch(url, {headers: {'Accept':'application/json'}, credentials: 'same-origin', cache: 'no-store'});
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const ct = (res.headers.get('content-type')||'');
+        if (ct.indexOf('application/json') === -1) throw new Error('Non-JSON response');
+        const data = await res.json();
+        const available = Math.max(0, (data.available ?? 0));
+        cache.set(key, available);
+        return available;
+      } catch (e) {
+        return 0; // treat as unknown; UI will show 0 but row highlight and server-side guard still protect
+      }
+    }
+
+    async function updateAvailableDisplay(tr) {
+      const pid = parseInt((tr.querySelector('select[name="product_id[]"]').value)||'0',10);
+      const wid = parseInt((tr.querySelector('select[name="warehouse_id[]"]').value)||'0',10);
+      const el  = tr.querySelector('.available-display');
+      if (!el) return;
+      if (!pid || !wid) { setAvailValue(el, '-'); updateRowHighlight(tr); return; }
+      setAvailLoading(el);
+      try {
+        const available = await fetchAvailable(pid, wid);
+        setAvailValue(el, available);
+      } catch (e) {
+        console.error('Available fetch failed', e);
+        setAvailError(el);
+      }
+      updateRowHighlight(tr);
+    }
+
     // Always update price when product changes; set qty=1 if empty/0; zero-out if cleared.
     rows.addEventListener('change', function (e) {
       if (e.target && e.target.name === 'product_id[]') {
@@ -144,7 +222,12 @@ use function App\Core\csrf_field;
           priceInput.value = '0.00';
           if (parseFloat(qtyInput.value) > 0) qtyInput.value = '0';
         }
+        updateAvailableDisplay(tr);
         recalc();
+      }
+      if (e.target && e.target.name === 'warehouse_id[]') {
+        const tr = e.target.closest('tr');
+        updateAvailableDisplay(tr);
       }
     });
 
@@ -152,6 +235,10 @@ use function App\Core\csrf_field;
     rows.addEventListener('input', function (e) {
       if (e.target && (e.target.name === 'qty[]' || e.target.name === 'price[]')) {
         recalc();
+        if (e.target.name === 'qty[]') {
+          const tr = e.target.closest('tr');
+          updateRowHighlight(tr);
+        }
       }
     });
 
@@ -167,6 +254,7 @@ use function App\Core\csrf_field;
       tr.querySelector('input[name="price[]"]').value = '0.00';
       tr.querySelector('.line-total').value = '0.00';
       rows.appendChild(tr);
+      updateAvailableDisplay(tr);
       recalc();
     });
 

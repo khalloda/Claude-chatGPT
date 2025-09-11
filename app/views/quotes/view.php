@@ -36,6 +36,11 @@ use function App\Core\csrf_field;
     <input type="hidden" name="id" value="<?= (int)$q['id'] ?>">
     <button type="submit" class="btn btn-outline-primary">Mark as sent</button>
   </form>
+  <form method="post" action="<?= \App\Core\base_url('/quotes/delete') ?>" style="display:inline-block;margin-right:8px;" onsubmit="return confirm('Delete this draft quote?');">
+    <?= \App\Core\csrf_field() ?>
+    <input type="hidden" name="id" value="<?= (int)$q['id'] ?>">
+    <button type="submit" class="btn btn-outline-danger" style="border-color:#c00;color:#c00;">Delete</button>
+  </form>
 <?php endif; ?>
   <?php if ($q['status']==='sent'): ?>
     <form method="post" action="<?= base_url('/quotes/cancel') ?>" style="display:inline">

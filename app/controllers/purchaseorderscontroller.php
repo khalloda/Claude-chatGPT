@@ -240,6 +240,36 @@ final class PurchaseOrdersController extends Controller
         ]);
     }
 
+    /** POST /purchaseorders/delete — delete only if status is draft */
+    public function destroy(): void {
+        require_auth();
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/purchaseorders'); }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $po = PurchaseOrder::find($id);
+        if (!$po) { flash_set('error','Not found.'); redirect('/purchaseorders'); }
+        if (($po['status'] ?? '') !== 'draft') {
+            flash_set('error','Only draft POs can be deleted.');
+            redirect('/purchaseorders/show?id='.$id);
+        }
+
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            // No FK cascade in baseline schema, delete items first
+            $pdo->prepare('DELETE FROM purchase_order_items WHERE purchase_order_id=?')->execute([$id]);
+            $pdo->prepare('DELETE FROM notes WHERE entity_type=\'purchase_order\' AND entity_id=?')->execute([$id]);
+            $pdo->prepare('DELETE FROM purchase_orders WHERE id=?')->execute([$id]);
+            $pdo->commit();
+            flash_set('success','Purchase Order deleted.');
+            redirect('/purchaseorders');
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            flash_set('error','Delete failed: '.$e->getMessage());
+            redirect('/purchaseorders/show?id='.$id);
+        }
+    }
+
     private function readItems(): array {
         $rows   = [];
         $pids   = $_POST['item_product_id'] ?? [];

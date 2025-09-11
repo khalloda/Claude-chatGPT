@@ -79,7 +79,7 @@ Redis/session (supported, read from `config/redis.php` and `Env`):
 
 ## Database (Current vs Target)
 
-Source of truth (live): `chatgpt2_mi_2025-09-03_14-27-44.sql`
+Source of truth (live): `chatgpt2_mi.sql`
 Pending/desired changes: SQL files in `scripts/*.sql`
 
 ### Current ERD (Live Dump)
@@ -198,6 +198,28 @@ Notable FK gaps in live schema:
 - `scripts/performance_testing.sql`
   - Adds: `performance_test_results` table for benchmark logging.
 - `scripts/database_security_setup.sql`
+
+## Application Endpoints
+
+### Stock Availability (UI helper)
+
+- Route: `GET /stock/available?product_id=<id>&warehouse_id=<id>`
+- Auth: requires logged-in session (uses same-origin cookies)
+- Response: JSON `{ product_id, product_code, product_name, warehouse_id, warehouse_name, qty_on_hand, qty_reserved, available }`
+- Caching: Disabled (`Cache-Control: no-store`). Client also sends cache-buster query and uses `credentials: 'same-origin'`.
+- Logging:
+  - Debug on success: includes on-hand, reserved, and computed available.
+  - Warning when product/warehouse not found or parameters invalid.
+  - Error on exceptions.
+
+### Quote Form Live Stock UI
+
+- View: `app/views/quotes/form.php`
+- Behavior:
+  - Adds an “Available” column per item row.
+  - Shows a spinner while fetching; displays the number on success; shows `ERR` and highlights the row if fetch fails.
+  - Row is highlighted if `Qty > Available`.
+  - Server-side enforcement remains in `QuotesController::store()`.
   - Adds users/privileges; requires DB name alignment. Creates audit tables `database_audit_log`, `security_audit_log`, maintenance procedures.
 
 ### Delta Summary
