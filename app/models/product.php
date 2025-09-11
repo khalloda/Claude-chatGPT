@@ -15,12 +15,14 @@ final class Product
         if (self::$reserveCols !== null) return;
         try {
             $pdo = DB::conn();
-            $st = $pdo->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'product_stocks' AND column_name IN ('qty_reserved','qty_reserved_quote','qty_reserved_order')");
-            $st->execute();
-            $cols = array_map(static fn($r) => (string)$r['column_name'], $st->fetchAll(PDO::FETCH_ASSOC) ?: []);
-            $hasQR = in_array('qty_reserved', $cols, true);
-            $hasQQuote = in_array('qty_reserved_quote', $cols, true);
-            $hasQOrder = in_array('qty_reserved_order', $cols, true);
+            // Robust detection: check columns individually
+            $chk = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'product_stocks' AND column_name = ?");
+            $chk->execute(['qty_reserved']);
+            $hasQR = (int)$chk->fetchColumn() > 0;
+            $chk->execute(['qty_reserved_quote']);
+            $hasQQuote = (int)$chk->fetchColumn() > 0;
+            $chk->execute(['qty_reserved_order']);
+            $hasQOrder = (int)$chk->fetchColumn() > 0;
             self::$reserveCols = [
                 'has_qty_reserved' => $hasQR,
                 'has_split' => ($hasQQuote && $hasQOrder),
@@ -413,19 +415,35 @@ public static function transferReserveQuoteToOrder(int $productId, int $warehous
     ")->execute([$productId, $warehouseId, $qty, $qty]);
 }
 
-public static function reservedOrderQty(int $productId, int $warehouseId): int
-{
-    self::loadReserveCols();
-    $pdo = DB::conn();
-    if (self::hasSplitReserve()) {
-        $st = $pdo->prepare('SELECT COALESCE(qty_reserved_order,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+    public static function reservedOrderQty(int $productId, int $warehouseId): int
+    {
+        self::loadReserveCols();
+        $pdo = DB::conn();
+        if (self::hasSplitReserve()) {
+            $st = $pdo->prepare('SELECT COALESCE(qty_reserved_order,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+            $st->execute([$productId,$warehouseId]);
+            return (int)($st->fetchColumn() ?: 0);
+        }
+        $st = $pdo->prepare('SELECT COALESCE(qty_reserved,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
         $st->execute([$productId,$warehouseId]);
         return (int)($st->fetchColumn() ?: 0);
     }
-    $st = $pdo->prepare('SELECT COALESCE(qty_reserved,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
-    $st->execute([$productId,$warehouseId]);
-    return (int)($st->fetchColumn() ?: 0);
-}
+
+    public static function reservedBucketsForProduct(int $productId): array
+    {
+        self::loadReserveCols();
+        $pdo = DB::conn();
+        if (self::hasSplitReserve()) {
+            $st = $pdo->prepare('SELECT SUM(COALESCE(qty_reserved_quote,0)) AS rq, SUM(COALESCE(qty_reserved_order,0)) AS ro FROM product_stocks WHERE product_id=?');
+            $st->execute([$productId]);
+            $r = $st->fetch(PDO::FETCH_ASSOC) ?: ['rq'=>0,'ro'=>0];
+            return ['rq'=>(int)$r['rq'], 'ro'=>(int)$r['ro']];
+        }
+        $st = $pdo->prepare('SELECT SUM(COALESCE(qty_reserved,0)) AS r FROM product_stocks WHERE product_id=?');
+        $st->execute([$productId]);
+        $r = (int)($st->fetchColumn() ?: 0);
+        return ['rq'=>0, 'ro'=>$r];
+    }
 public static function canFulfill(int $productId, int $warehouseId, int $qty): bool
 {
     $st = DB::conn()->prepare(

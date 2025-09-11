@@ -267,6 +267,7 @@ $router->get('/adjustments/print', 'adjustmentscontroller@printnote');
 
 // reservations overview
 $router->get('/reservations', 'reservationscontroller@index');
+$router->get('/reservations/detail', 'reservationscontroller@detail');
 
 // Track request performance
 $requestStart = microtime(true);

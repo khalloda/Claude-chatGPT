@@ -231,9 +231,13 @@ final class QuotesController extends Controller
                 redirect('/quotes/show?id='.$id);
             }
 
-            // Reserve quantities
+            // Reserve quantities (quote bucket if available, else legacy)
             foreach ($demands as $d) {
-                Product::adjustReservedQuote((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
+                if (\App\Models\Product::supportsSplitReserve()) {
+                    Product::adjustReservedQuote((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
+                } else {
+                    Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
+                }
             }
             $pdo->prepare("UPDATE quotes SET status='sent' WHERE id=?")->execute([$id]);
             $pdo->commit();

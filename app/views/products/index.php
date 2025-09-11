@@ -57,7 +57,7 @@ use function App\Core\flash_get;
       </tr>
     </thead>
     <tbody>
-      <?php foreach ($items as $p): $avail = (int)$p['on_hand'] - (int)$p['reserved']; ?>
+      <?php foreach ($items as $p): $avail = (int)$p['on_hand'] - (int)$p['reserved']; $buckets = \App\Models\Product::reservedBucketsForProduct((int)$p['id']); ?>
         <tr>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;"><?= htmlspecialchars($p['code'], ENT_QUOTES, 'UTF-8') ?></td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -65,7 +65,15 @@ use function App\Core\flash_get;
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;"><?= htmlspecialchars(trim(($p['make_name'] ?? '').' / '.($p['model_name'] ?? ''), ' /'), ENT_QUOTES, 'UTF-8') ?></td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;text-align:right;"><?= number_format((float)$p['cost'],2) ?></td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;text-align:right;"><?= number_format((float)$p['price'],2) ?></td>
-          <td style="border-bottom:1px solid #f2f2f4;padding:8px;text-align:right;"><?= (int)$avail ?> / <?= (int)$p['reserved'] ?></td>
+          <td style="border-bottom:1px solid #f2f2f4;padding:8px;text-align:right;">
+            <?= (int)$avail ?> / <?= (int)$p['reserved'] ?>
+            <span style="margin-left:6px;" title="Reserved for Quotes">
+              <span style="display:inline-block;background:#eef2ff;color:#3730a3;border-radius:10px;padding:2px 6px;font-size:12px;">Q <?= (int)($buckets['rq'] ?? 0) ?></span>
+            </span>
+            <span style="margin-left:4px;" title="Reserved for Orders">
+              <span style="display:inline-block;background:#ecfeff;color:#155e75;border-radius:10px;padding:2px 6px;font-size:12px;">O <?= (int)($buckets['ro'] ?? 0) ?></span>
+            </span>
+          </td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;white-space:nowrap;">
             <a href="<?= base_url('/products/stock?id='.(int)$p['id']) ?>">Stock</a> &nbsp;|&nbsp;
             <a href="<?= base_url('/products/edit?id='.(int)$p['id']) ?>">Edit</a> &nbsp;|&nbsp;
