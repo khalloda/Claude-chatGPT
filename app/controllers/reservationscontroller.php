@@ -21,8 +21,8 @@ final class ReservationsController extends Controller
         $from       = trim((string)($_GET['from'] ?? '')) ?: null;
         $to         = trim((string)($_GET['to'] ?? '')) ?: null;
 
-        $whereQ = ['q.status = \"sent\"'];
-        $argsQ  = [];
+        $whereQ = ['q.status = ?'];
+        $argsQ  = ['sent'];
         if ($customerId) { $whereQ[] = 'q.customer_id = ?'; $argsQ[] = $customerId; }
         if ($from) { $whereQ[] = 'q.created_at >= ?'; $argsQ[] = $from.' 00:00:00'; }
         if ($to)   { $whereQ[] = 'q.created_at <= ?'; $argsQ[] = $to.' 23:59:59'; }
@@ -59,8 +59,10 @@ final class ReservationsController extends Controller
         $stO = $pdo->prepare($oSql); $stO->execute($argsO);
         $orders = $stO->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        // Merge and compute totals
-        $rows = array_merge($quotes, $orders);
+        // Merge according to scope filter
+        if ($scope === 'quote')      { $rows = $quotes; }
+        elseif ($scope === 'order')  { $rows = $orders; }
+        else                         { $rows = array_merge($quotes, $orders); }
         $tot_qty = 0; $tot_val = 0.0;
         foreach ($rows as $r) { $tot_qty += (int)($r['qty_reserved'] ?? 0); $tot_val += (float)($r['value_reserved'] ?? 0.0); }
 
