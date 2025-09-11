@@ -126,3 +126,23 @@ Related Issues: TODO
   - Integration: Create quote with Qty N, mark as Sent â†’ assert `qty_reserved` increased by N. Then cancel/expire â†’ assert release.
   - Negative: Try to mark Sent when available < demand â†’ expect failure and no status change.
   - Conversion flow (Future): When converting to Sales Order, consider consuming reservation or transferring to SO; currently tracked separately (see ISSUE-0002 suspicion).
+
+### ISSUE-0006: Split reservations (quote vs order) and delivery confirmation
+
+- Issue ID & Title: ISSUE-0006 — Split reservations (quote vs order) with delivery confirmation
+- Description: Business asks to track reservations separately for Quotes and Orders. When converting a Quote to Order, move the reserved quantity from “for quotes” to “for order”. On delivery confirmation from the related Invoice, release the “for order” reservation and reduce stock on hand.
+- Suspected Location: app/controllers/quotescontroller.php, app/controllers/invoicescontroller.php, app/models/product.php, stock API.
+- Severity: Major
+- Status: Needs Verification
+- Root Cause Analysis:
+  - Prior model only had a single qty_reserved column and did not change reservations on conversion or delivery.
+- Proposed/Implemented Fix:
+  - DB Migration (pending): scripts/2025-09-11_split_reservations.sql adds qty_reserved_quote and qty_reserved_order. Optional step migrates legacy qty_reserved to order bucket.
+  - Model: detection + helpers (availableQty, adjustReservedQuote, adjustReservedOrder, transferReserveQuoteToOrder, consumeFromOrderReservation, reservedOrderQty) with legacy fallback.
+  - Controllers: Quotes reserve/release quote bucket; convert transfers quote?order; Invoices confirm-delivery consumes order reservations.
+  - Stock API: includes split fields when present and computes available accordingly.
+- Database/Migration Impact: Requires applying the migration; without it, app falls back to legacy behavior using qty_reserved.
+- Related Tests:
+  - Mark Sent reserves quote bucket; Cancel/Expire releases it.
+  - Convert Quote?Order transfers to order bucket.
+  - Confirm Delivered from Invoice reduces order bucket and on-hand.

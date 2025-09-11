@@ -92,9 +92,16 @@ final class OrdersController extends Controller
       $copy = $pdo->prepare("SELECT product_id, warehouse_id, qty, price, line_total FROM quote_items WHERE quote_id=?");
       $ins  = $pdo->prepare("INSERT INTO sales_order_items (sales_order_id, product_id, warehouse_id, qty, price, line_total) VALUES (?,?,?,?,?,?)");
       $copy->execute([$qid]);
+      $agg = [];
       while ($row = $copy->fetch(PDO::FETCH_ASSOC)) {
         $ins->execute([$soId,(int)$row['product_id'],(int)$row['warehouse_id'],(int)$row['qty'],(float)$row['price'],(float)$row['line_total']]);
+        $k = ((int)$row['product_id']).'@'.((int)$row['warehouse_id']);
+        if (!isset($agg[$k])) $agg[$k] = ['product_id'=>(int)$row['product_id'],'warehouse_id'=>(int)$row['warehouse_id'],'qty'=>0];
+        $agg[$k]['qty'] += (int)$row['qty'];
       }
+
+      // Move reservations: quote -> order (no-op on legacy schema)
+      foreach ($agg as $d) { \App\Models\Product::transferReserveQuoteToOrder($d['product_id'], $d['warehouse_id'], $d['qty']); }
 
       $pdo->commit();
       flash_set('success','Sales Order created: '.$soNo);
