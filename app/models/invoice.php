@@ -17,24 +17,28 @@ final class Invoice
 
     public static function all(int $limit = 100, int $offset = 0, ?string $status = null, ?int $customerId = null): array
     {
-        $sql = "SELECT /*+ USE_INDEX(i, idx_invoices_status_date) */
-                       i.id, i.inv_no, i.customer_id, i.total, i.paid_amount, i.status, i.created_at,
+        $pdo = DB::conn();
+        // Detect items table (invoice_items vs invoice_lines, etc.)
+        try { [$itemsTbl] = self::detectItemsMeta($pdo); }
+        catch (\Throwable $e) { $itemsTbl = 'invoice_items'; }
+
+        $sql = "SELECT i.id, i.inv_no, i.customer_id, i.total, i.paid_amount, i.status, i.created_at,
                        c.name AS customer_name,
                        COALESCE(line_summary.line_count, 0) as line_count,
                        COALESCE(payment_summary.payment_count, 0) as payment_count
-                FROM invoices i
-                LEFT JOIN customers c ON c.id = i.customer_id
-                LEFT JOIN (
-                    SELECT invoice_id, COUNT(*) as line_count
-                    FROM invoice_lines
-                    GROUP BY invoice_id
-                ) line_summary ON line_summary.invoice_id = i.id
-                LEFT JOIN (
-                    SELECT invoice_id, COUNT(*) as payment_count
-                    FROM invoice_payments
-                    GROUP BY invoice_id
-                ) payment_summary ON payment_summary.invoice_id = i.id
-                WHERE 1=1";
+                  FROM invoices i
+             LEFT JOIN customers c ON c.id = i.customer_id
+             LEFT JOIN (
+                        SELECT invoice_id, COUNT(*) as line_count
+                          FROM {$itemsTbl}
+                      GROUP BY invoice_id
+                       ) line_summary ON line_summary.invoice_id = i.id
+             LEFT JOIN (
+                        SELECT invoice_id, COUNT(*) as payment_count
+                          FROM invoice_payments
+                      GROUP BY invoice_id
+                       ) payment_summary ON payment_summary.invoice_id = i.id
+                 WHERE 1=1";
         
         $params = [];
         
@@ -52,9 +56,9 @@ final class Invoice
         $params[] = $limit;
         $params[] = $offset;
         
-        $st = DB::conn()->prepare($sql);
+        $st = $pdo->prepare($sql);
         $st->execute($params);
-        
+
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
     
