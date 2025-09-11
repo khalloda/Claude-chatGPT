@@ -238,8 +238,10 @@ $router->post('/supplierpayments', 'supplierpaymentscontroller@store');
 $router->post('/supplierpayments/delete', 'supplierpaymentscontroller@destroy');
 
 // sales returns (credit notes)
+$router->get('/salesreturns', 'salesreturnscontroller@index');
+$router->get('/salesreturns/show', 'salesreturnscontroller@show');
 $router->post('/salesreturns', 'salesreturnscontroller@store');
-$router->get('/salesreturns/print', 'salesreturnscontroller@printnote');
+$router->get('/salesreturns/print', 'salesreturnscontroller@printpage');
 
 // purchase returns (debit notes)
 $router->get('/purchasereturns', 'purchasereturnscontroller@index');

@@ -12,6 +12,18 @@ use function App\Core\redirect;
 
 final class SalesReturnsController extends Controller
 {
+    public function index(): void {
+        require_auth();
+        $pdo = DB::conn();
+        $sql = "SELECT sr.id, sr.sr_no, sr.sales_invoice_id, sr.total, sr.created_at,
+                       i.inv_no, c.name AS customer_name
+                  FROM sales_returns sr
+             LEFT JOIN invoices i ON i.id = sr.sales_invoice_id
+             LEFT JOIN customers c ON c.id = i.customer_id
+              ORDER BY sr.id DESC LIMIT 200";
+        $items = $pdo->query($sql)->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $this->view('salesreturns/index', ['items'=>$items]);
+    }
     /** Create a credit note (sales return) from an invoice */
     public function store(): void {
         require_auth();
