@@ -6,8 +6,10 @@ use App\Core\Controller;
 use App\Core\DB;
 use App\Models\Quote;
 use App\Models\SalesOrder;
+use App\Models\Product;
 use App\Models\Note;
 use App\Services\DocNumbers;
+use App\Core\Logger;
 use PDO;
 
 use function App\Core\require_auth;
@@ -209,10 +211,43 @@ final class QuotesController extends Controller
             flash_set('error','Only draft quotes can be marked as sent.');
             redirect('/quotes/show?id='.$id);
         }
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            $items = Quote::items($id);
+            $demands = $this->aggregateDemands($items);
+            // Ensure availability considering existing reservations
+            $check = $pdo->prepare('SELECT qty_on_hand, qty_reserved FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+            $viol = [];
+            foreach ($demands as $d) {
+                $check->execute([$d['product_id'], $d['warehouse_id']]);
+                $row = $check->fetch(\PDO::FETCH_ASSOC) ?: ['qty_on_hand'=>0,'qty_reserved'=>0];
+                $available = max(0, (int)$row['qty_on_hand'] - (int)$row['qty_reserved']);
+                if ($d['qty'] > $available) {
+                    $viol[] = sprintf('P#%d W#%d need %d, available %d', $d['product_id'], $d['warehouse_id'], $d['qty'], $available);
+                }
+            }
+            if ($viol) {
+                $pdo->rollBack();
+                flash_set('error', 'Cannot mark sent. Insufficient stock to reserve: '.implode('; ', $viol));
+                redirect('/quotes/show?id='.$id);
+            }
 
-        DB::conn()->prepare("UPDATE quotes SET status='sent' WHERE id=?")->execute([$id]);
-        flash_set('success','Quote marked as sent.');
-        redirect('/quotes/show?id='.$id);
+            // Reserve quantities
+            foreach ($demands as $d) {
+                Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
+            }
+            $pdo->prepare("UPDATE quotes SET status='sent' WHERE id=?")->execute([$id]);
+            $pdo->commit();
+            Logger::info('Quote reservations booked', ['quote_id'=>$id, 'items'=>$demands]);
+            flash_set('success','Quote marked as sent.');
+            redirect('/quotes/show?id='.$id);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            Logger::error('Mark sent failed', ['quote_id'=>$id, 'error'=>$e->getMessage()]);
+            flash_set('error','Mark sent failed: '.$e->getMessage());
+            redirect('/quotes/show?id='.$id);
+        }
     }
 
     /** POST /quotes/createorder — Q→SO */
@@ -304,9 +339,28 @@ public function createorder(): void {
             flash_set('error','Only draft/sent quotes can be cancelled.');
             redirect('/quotes/show?id='.$id);
         }
-        DB::conn()->prepare("UPDATE quotes SET status='cancelled' WHERE id=?")->execute([$id]);
-        flash_set('success','Quote cancelled.');
-        redirect('/quotes/show?id='.$id);
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            // Release reservations only if it was previously reserved (sent)
+            if (($q['status'] ?? '') === 'sent') {
+                $items = Quote::items($id);
+                $demands = $this->aggregateDemands($items);
+                foreach ($demands as $d) {
+                    Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
+                }
+                Logger::info('Quote reservations released on cancel', ['quote_id'=>$id, 'items'=>$demands]);
+            }
+            $pdo->prepare("UPDATE quotes SET status='cancelled' WHERE id=?")->execute([$id]);
+            $pdo->commit();
+            flash_set('success','Quote cancelled.');
+            redirect('/quotes/show?id='.$id);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            Logger::error('Cancel quote failed', ['quote_id'=>$id, 'error'=>$e->getMessage()]);
+            flash_set('error','Cancel failed: '.$e->getMessage());
+            redirect('/quotes/show?id='.$id);
+        }
     }
 
     /** POST /quotes/markexpired */
@@ -320,9 +374,27 @@ public function createorder(): void {
             flash_set('error','Quote already expired.');
             redirect('/quotes/show?id='.$id);
         }
-        DB::conn()->prepare("UPDATE quotes SET status='expired' WHERE id=?")->execute([$id]);
-        flash_set('success','Quote marked as expired.');
-        redirect('/quotes/show?id='.$id);
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            if (($q['status'] ?? '') === 'sent') {
+                $items = Quote::items($id);
+                $demands = $this->aggregateDemands($items);
+                foreach ($demands as $d) {
+                    Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
+                }
+                Logger::info('Quote reservations released on expire', ['quote_id'=>$id, 'items'=>$demands]);
+            }
+            $pdo->prepare("UPDATE quotes SET status='expired' WHERE id=?")->execute([$id]);
+            $pdo->commit();
+            flash_set('success','Quote marked as expired.');
+            redirect('/quotes/show?id='.$id);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            Logger::error('Mark expired failed', ['quote_id'=>$id, 'error'=>$e->getMessage()]);
+            flash_set('error','Mark expired failed: '.$e->getMessage());
+            redirect('/quotes/show?id='.$id);
+        }
     }
 
     /** POST /quotes/delete — delete only if status is draft */
@@ -407,5 +479,24 @@ public function createorder(): void {
         foreach (range('A','Z') as $ch) { $try=$base.'-'.$ch; $chk->execute([$try]); if(!$chk->fetchColumn()) return $try; }
         for ($i=2;$i<100;$i++) { $try=$base.'-'.$i; $chk->execute([$try]); if(!$chk->fetchColumn()) return $try; }
         return $base.'-'.date('His');
+    }
+
+    /**
+     * Aggregate rows by (product_id, warehouse_id)
+     * @param array $items rows from Quote::items()
+     * @return array [['product_id'=>..,'warehouse_id'=>..,'qty'=>..], ...]
+     */
+    private function aggregateDemands(array $items): array {
+        $demands = [];
+        foreach ($items as $r) {
+            $pid = (int)($r['product_id'] ?? 0);
+            $wid = (int)($r['warehouse_id'] ?? 0);
+            $qty = max(1, (int)($r['qty'] ?? 0));
+            if ($pid<=0 || $wid<=0 || $qty<=0) continue;
+            $key = $pid.'@'.$wid;
+            if (!isset($demands[$key])) $demands[$key] = ['product_id'=>$pid,'warehouse_id'=>$wid,'qty'=>0];
+            $demands[$key]['qty'] += $qty;
+        }
+        return array_values($demands);
     }
 }

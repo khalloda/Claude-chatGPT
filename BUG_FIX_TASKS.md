@@ -105,3 +105,24 @@ Related Issues: TODO
 - Related Tests:
   - Integration: Create a quote with `Tax %=10` and verify view/print show correct tax/total even if DB totals are zero.
   - Unit (optional): Helper to compute totals from a list of line items.
+- ### ISSUE-0005: Quote does not reserve stock when marked Sent
+
+- Issue ID & Title: ISSUE-0005 — Quote does not reserve stock on Sent
+- Description: Creating a quote for product "Sparks Plug" with Qty 3 and marking it as Sent leaves `product_stocks.qty_reserved` unchanged (Avail stays 8, Reserved 0).
+- Suspected Location: `app/controllers/quotescontroller.php` for status transitions; reservation utilities in `app/models/product.php` (`adjustReserved`, `consumeFromReservation`).
+- Severity: Major
+- Status: Needs Verification
+- Root Cause Analysis:
+  - No reservation adjustments were performed when marking quotes as Sent, Cancelled, or Expired. Status changed without touching `product_stocks`.
+  - Existing helpers in `Product` model were unused by quote flows.
+- Implemented Fix:
+  - `quotescontroller@marksent`: now rechecks availability vs (on_hand - reserved) and increments `qty_reserved` per `(product_id, warehouse_id)` atomically via `Product::adjustReserved(.., +qty)`. Wrapped in a DB transaction.
+  - `quotescontroller@cancel`: if previous status was `sent`, releases reservations via `adjustReserved(.., -qty)`.
+  - `quotescontroller@markexpired`: similarly releases reservations if previous status was `sent`.
+  - Added logging (info/error) for reservation booking/release.
+- Database/Migration Impact:
+  - None; uses existing `product_stocks (qty_reserved)` from baseline `chatgpt2_mi.sql`.
+- Related Tests:
+  - Integration: Create quote with Qty N, mark as Sent → assert `qty_reserved` increased by N. Then cancel/expire → assert release.
+  - Negative: Try to mark Sent when available < demand → expect failure and no status change.
+  - Conversion flow (Future): When converting to Sales Order, consider consuming reservation or transferring to SO; currently tracked separately (see ISSUE-0002 suspicion).
