@@ -40,7 +40,7 @@ final class ReservationsController extends Controller
         $stQ = $pdo->prepare($qSql); $stQ->execute($argsQ);
         $quotes = $stQ->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        $whereO = ["COALESCE(so.status,'open') IN ('open','draft')"];
+        $whereO = ["(so.status IN ('open','draft','') OR so.status IS NULL)"];
         $argsO  = [];
         if ($customerId) { $whereO[] = 'so.customer_id = ?'; $argsO[] = $customerId; }
         if ($from) { $whereO[] = 'so.created_at >= ?'; $argsO[] = $from.' 00:00:00'; }
