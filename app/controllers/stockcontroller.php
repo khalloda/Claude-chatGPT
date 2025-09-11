@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\DB;
 use App\Core\Logger;
+use App\Models\Product;
 
 use function App\Core\require_auth;
 
@@ -31,7 +32,7 @@ final class StockController extends Controller
             return;
         }
         try {
-            $st = DB::conn()->prepare("\n                SELECT p.id AS product_id, p.code, p.name AS product_name,\n                       w.id AS warehouse_id, w.name AS warehouse_name,\n                       COALESCE(ps.qty_on_hand,0) AS qty_on_hand,\n                       COALESCE(ps.qty_reserved,0) AS qty_reserved\n                  FROM products p\n                  CROSS JOIN warehouses w\n                  LEFT JOIN product_stocks ps\n                    ON ps.product_id = p.id AND ps.warehouse_id = w.id\n                 WHERE p.id = ? AND w.id = ?\n                 LIMIT 1\n            ");
+            $st = DB::conn()->prepare("\n                SELECT p.id AS product_id, p.code, p.name AS product_name,\n                       w.id AS warehouse_id, w.name AS warehouse_name,\n                       COALESCE(ps.qty_on_hand,0) AS qty_on_hand,\n                       COALESCE(ps.qty_reserved,0) AS qty_reserved,\n                       COALESCE(ps.qty_reserved_quote,0) AS rq,\n                       COALESCE(ps.qty_reserved_order,0) AS ro\n                  FROM products p\n                  CROSS JOIN warehouses w\n                  LEFT JOIN product_stocks ps\n                    ON ps.product_id = p.id AND ps.warehouse_id = w.id\n                 WHERE p.id = ? AND w.id = ?\n                 LIMIT 1\n            ");
             $st->execute([$pid, $wid]);
             $row = $st->fetch(\PDO::FETCH_ASSOC) ?: null;
             if (!$row) {
@@ -44,13 +45,18 @@ final class StockController extends Controller
                 return;
             }
             $on  = (int)($row['qty_on_hand'] ?? 0);
-            $res = (int)($row['qty_reserved'] ?? 0);
+            $rq  = (int)($row['rq'] ?? 0);
+            $ro  = (int)($row['ro'] ?? 0);
+            $legacy = (int)($row['qty_reserved'] ?? 0);
+            $res = ($rq + $ro) > 0 ? ($rq + $ro) : $legacy;
             $available = max(0, $on - $res);
             Logger::debug('Stock available: success', [
                 'product_id' => $pid,
                 'warehouse_id' => $wid,
                 'qty_on_hand' => $on,
-                'qty_reserved' => $res,
+                'reserved_quote' => $rq,
+                'reserved_order' => $ro,
+                'qty_reserved_legacy' => $legacy,
                 'available' => $available,
             ]);
             echo json_encode([
@@ -60,7 +66,9 @@ final class StockController extends Controller
                 'warehouse_id'   => (int)$row['warehouse_id'],
                 'warehouse_name' => (string)($row['warehouse_name'] ?? ''),
                 'qty_on_hand'    => $on,
-                'qty_reserved'   => $res,
+                'qty_reserved_total'   => $res,
+                'qty_reserved_quote'   => $rq,
+                'qty_reserved_order'   => $ro,
                 'available'      => $available,
             ], JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {

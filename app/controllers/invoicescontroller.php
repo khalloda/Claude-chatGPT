@@ -7,6 +7,7 @@ use App\Core\DB;
 use App\Models\Invoice;
 use App\Models\SalesOrder;
 use App\Models\Note;
+use App\Models\Product;
 use PDO;
 
 use function App\Core\require_auth;
@@ -48,6 +49,18 @@ final class InvoicesController extends Controller
         $includeNotes = isset($_GET['include_notes']) && $_GET['include_notes'] === '1';
         $publicNotes  = $includeNotes ? Note::publicFor('invoice',$id) : [];
 
+        // Determine if we can confirm delivery (i.e., reserved order exists for all lines)
+        $canConfirmDelivery = false;
+        try {
+            foreach (($items ?? []) as $it) {
+                $pid=(int)$it['product_id']; $wid=(int)($it['warehouse_id'] ?? 0); $qty=(int)$it['qty'];
+                if ($wid>0 && $qty>0) {
+                    $ro = Product::reservedOrderQty($pid,$wid);
+                    if ($ro >= $qty) { $canConfirmDelivery = true; break; }
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
         $this->view('invoices/view', [
             'i'            => $inv,
             'items'        => $items,
@@ -55,6 +68,7 @@ final class InvoicesController extends Controller
             'payments'     => $payments,   // <- pass to view
             'paid'         => $paid,
             'due'          => $due,
+            'can_confirm_delivery' => $canConfirmDelivery,
             'public_notes' => $publicNotes,
             'include_notes'=> $includeNotes,
         ]);
@@ -219,6 +233,33 @@ final class InvoicesController extends Controller
             flash_set('success','Payment deleted.');
         } catch (\Throwable $e) {
             flash_set('error','Delete payment failed: '.$e->getMessage());
+        }
+        redirect('/invoices/show?id='.$invoiceId);
+    }
+
+    /** Confirm goods delivered: consume reserved order quantities */
+    public function confirmdelivery(): void
+    {
+        require_auth();
+        if (!verify_csrf_request()) { flash_set('error','Invalid session.'); redirect('/invoices'); }
+        $invoiceId = (int)($_POST['invoice_id'] ?? 0);
+        if ($invoiceId <= 0) { redirect('/invoices'); }
+
+        $pdo = DB::conn();
+        $pdo->beginTransaction();
+        try {
+            $items = Invoice::items($invoiceId);
+            foreach ($items as $it) {
+                $pid=(int)$it['product_id']; $wid=(int)($it['warehouse_id'] ?? 0); $qty=(int)$it['qty'];
+                if ($pid>0 && $wid>0 && $qty>0) {
+                    Product::consumeFromOrderReservation($pid, $wid, $qty);
+                }
+            }
+            $pdo->commit();
+            flash_set('success','Delivery confirmed. Reserved (order) released and stock decremented.');
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            flash_set('error','Delivery confirmation failed: '.$e->getMessage());
         }
         redirect('/invoices/show?id='.$invoiceId);
     }

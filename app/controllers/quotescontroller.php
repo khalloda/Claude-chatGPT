@@ -74,24 +74,23 @@ final class QuotesController extends Controller
                 $demands[$key]['qty'] += $qty;
             }
 
-            // Check availability: available = GREATEST(qty_on_hand - qty_reserved, 0)
+            // Check availability: available = qty_on_hand - (reserved_quote + reserved_order) OR legacy reserved
             $violations = [];
-            $check = $pdo->prepare("\n                SELECT p.code, p.name AS product_name, w.name AS warehouse_name,\n                       COALESCE(ps.qty_on_hand,0) AS qty_on_hand,\n                       COALESCE(ps.qty_reserved,0) AS qty_reserved\n                  FROM products p\n                  CROSS JOIN warehouses w\n                  LEFT JOIN product_stocks ps\n                    ON ps.product_id = p.id AND ps.warehouse_id = w.id\n                 WHERE p.id = ? AND w.id = ?\n                 LIMIT 1\n            ");
             foreach ($demands as $d) {
-                $check->execute([$d['pid'], $d['wid']]);
-                $row = $check->fetch(\PDO::FETCH_ASSOC) ?: null;
-                $on  = (int)($row['qty_on_hand'] ?? 0);
-                $res = (int)($row['qty_reserved'] ?? 0);
-                $available = max(0, $on - $res);
+                $available = \App\Models\Product::availableQty((int)$d['pid'], (int)$d['wid']);
                 if ($d['qty'] > $available) {
+                    // Fetch labels for friendly error
+                    $lab = $pdo->prepare('SELECT p.code, p.name AS product_name, w.name AS warehouse_name FROM products p CROSS JOIN warehouses w WHERE p.id=? AND w.id=? LIMIT 1');
+                    $lab->execute([$d['pid'],$d['wid']]);
+                    $row = $lab->fetch(\PDO::FETCH_ASSOC) ?: [];
                     $violations[] = [
-                        'product_id'    => $d['pid'],
-                        'warehouse_id'  => $d['wid'],
+                        'product_id'    => (int)$d['pid'],
+                        'warehouse_id'  => (int)$d['wid'],
                         'product_code'  => (string)($row['code'] ?? ''),
                         'product_name'  => (string)($row['product_name'] ?? ''),
                         'warehouse_name'=> (string)($row['warehouse_name'] ?? ''),
-                        'requested'     => $d['qty'],
-                        'available'     => $available,
+                        'requested'     => (int)$d['qty'],
+                        'available'     => (int)$available,
                     ];
                 }
             }
@@ -220,9 +219,8 @@ final class QuotesController extends Controller
             $check = $pdo->prepare('SELECT qty_on_hand, qty_reserved FROM product_stocks WHERE product_id=? AND warehouse_id=?');
             $viol = [];
             foreach ($demands as $d) {
-                $check->execute([$d['product_id'], $d['warehouse_id']]);
-                $row = $check->fetch(\PDO::FETCH_ASSOC) ?: ['qty_on_hand'=>0,'qty_reserved'=>0];
-                $available = max(0, (int)$row['qty_on_hand'] - (int)$row['qty_reserved']);
+                // Use model helper to account for split reservations when present
+                $available = \App\Models\Product::availableQty((int)$d['product_id'], (int)$d['warehouse_id']);
                 if ($d['qty'] > $available) {
                     $viol[] = sprintf('P#%d W#%d need %d, available %d', $d['product_id'], $d['warehouse_id'], $d['qty'], $available);
                 }
@@ -235,7 +233,7 @@ final class QuotesController extends Controller
 
             // Reserve quantities
             foreach ($demands as $d) {
-                Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
+                Product::adjustReservedQuote((int)$d['product_id'], (int)$d['warehouse_id'], (int)$d['qty']);
             }
             $pdo->prepare("UPDATE quotes SET status='sent' WHERE id=?")->execute([$id]);
             $pdo->commit();
@@ -299,6 +297,7 @@ public function createorder(): void {
             VALUES (?,?,?,?,?,?)
         ");
         $copy->execute([$quoteId]);
+        $resAgg = [];
         while ($row = $copy->fetch(\PDO::FETCH_ASSOC)) {
             $ins->execute([
                 $soId,
@@ -308,6 +307,9 @@ public function createorder(): void {
                 (float)$row['price'],
                 (float)$row['line_total'],
             ]);
+            $k = ((int)$row['product_id']).'@'.((int)$row['warehouse_id']);
+            if (!isset($resAgg[$k])) $resAgg[$k] = ['product_id'=>(int)$row['product_id'],'warehouse_id'=>(int)$row['warehouse_id'],'qty'=>0];
+            $resAgg[$k]['qty'] += (int)$row['qty'];
         }
 
         // (Optional) reflect acceptance on the quote after conversion
@@ -316,6 +318,9 @@ public function createorder(): void {
                SET status = CASE WHEN status IN ('draft','sent') THEN 'accepted' ELSE status END
              WHERE id = ?
         ")->execute([$quoteId]);
+
+        // Move reservations: quote -> order (no-op on legacy schema)
+        foreach ($resAgg as $d) { \App\Models\Product::transferReserveQuoteToOrder($d['product_id'], $d['warehouse_id'], $d['qty']); }
 
         $pdo->commit();
         \App\Core\flash_set('success','Sales Order created: '.$soNo);
@@ -347,7 +352,7 @@ public function createorder(): void {
                 $items = Quote::items($id);
                 $demands = $this->aggregateDemands($items);
                 foreach ($demands as $d) {
-                    Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
+                    Product::adjustReservedQuote((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
                 }
                 Logger::info('Quote reservations released on cancel', ['quote_id'=>$id, 'items'=>$demands]);
             }
@@ -381,7 +386,7 @@ public function createorder(): void {
                 $items = Quote::items($id);
                 $demands = $this->aggregateDemands($items);
                 foreach ($demands as $d) {
-                    Product::adjustReserved((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
+                    Product::adjustReservedQuote((int)$d['product_id'], (int)$d['warehouse_id'], - (int)$d['qty']);
                 }
                 Logger::info('Quote reservations released on expire', ['quote_id'=>$id, 'items'=>$demands]);
             }

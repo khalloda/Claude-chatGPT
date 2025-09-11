@@ -21,6 +21,14 @@ $status        = $i['status'] ?? 'unpaid';
     &nbsp;| Balance: <strong><?= number_format($balance,2) ?></strong>
   </div>
 
+  <?php if (!empty($can_confirm_delivery)): ?>
+    <form method="post" action="<?= base_url('/invoices/confirm-delivery') ?>" style="margin:10px 0;display:inline-block;">
+      <?= csrf_field() ?>
+      <input type="hidden" name="invoice_id" value="<?= (int)$i['id'] ?>">
+      <button type="submit" style="padding:6px 10px;border:1px solid #0a0;border-radius:8px;background:#0a0;color:#fff;cursor:pointer;">Confirm Delivered</button>
+    </form>
+  <?php endif; ?>
+
   <p style="margin-top:6px;">
     <a href="<?= base_url('/invoices/print?id='.(int)$i['id']) ?>">Print</a>
   </p>

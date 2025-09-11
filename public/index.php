@@ -177,6 +177,7 @@ $router->get('/invoices/print', 'invoicescontroller@printpage');
 $router->post('/invoices/create-from-order', 'invoicescontroller@createfromorder');
 $router->post('/invoices/addpayment', 'invoicescontroller@addpayment');
 $router->post('/invoices/deletepayment', 'invoicescontroller@deletepayment');
+$router->post('/invoices/confirm-delivery', 'invoicescontroller@confirmdelivery');
 
 // payments (invoice)
 $router->get('/payments', 'paymentscontroller@index');

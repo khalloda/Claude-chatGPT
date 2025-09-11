@@ -8,6 +8,68 @@ use PDO;
 
 final class Product
 {
+    private static ?array $reserveCols = null; // cache presence of split reserve columns
+
+    private static function loadReserveCols(): void
+    {
+        if (self::$reserveCols !== null) return;
+        try {
+            $pdo = DB::conn();
+            $st = $pdo->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'product_stocks' AND column_name IN ('qty_reserved','qty_reserved_quote','qty_reserved_order')");
+            $st->execute();
+            $cols = array_map(static fn($r) => (string)$r['column_name'], $st->fetchAll(PDO::FETCH_ASSOC) ?: []);
+            $hasQR = in_array('qty_reserved', $cols, true);
+            $hasQQuote = in_array('qty_reserved_quote', $cols, true);
+            $hasQOrder = in_array('qty_reserved_order', $cols, true);
+            self::$reserveCols = [
+                'has_qty_reserved' => $hasQR,
+                'has_split' => ($hasQQuote && $hasQOrder),
+            ];
+        } catch (\Throwable $e) {
+            self::$reserveCols = ['has_qty_reserved'=>true,'has_split'=>false];
+        }
+    }
+
+    private static function hasSplitReserve(): bool
+    {
+        self::loadReserveCols();
+        return (bool)self::$reserveCols['has_split'];
+    }
+
+    public static function supportsSplitReserve(): bool
+    {
+        return self::hasSplitReserve();
+    }
+
+    public static function availableQty(int $productId, int $warehouseId): int
+    {
+        self::loadReserveCols();
+        $pdo = DB::conn();
+        if (self::hasSplitReserve()) {
+            $st = $pdo->prepare('SELECT qty_on_hand, COALESCE(qty_reserved_quote,0) AS rq, COALESCE(qty_reserved_order,0) AS ro FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+            $st->execute([$productId, $warehouseId]);
+            $r = $st->fetch(PDO::FETCH_ASSOC) ?: ['qty_on_hand'=>0,'rq'=>0,'ro'=>0];
+            return max(0, (int)$r['qty_on_hand'] - ((int)$r['rq'] + (int)$r['ro']));
+        }
+        $st = $pdo->prepare('SELECT qty_on_hand, COALESCE(qty_reserved,0) AS r FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+        $st->execute([$productId, $warehouseId]);
+        $r = $st->fetch(PDO::FETCH_ASSOC) ?: ['qty_on_hand'=>0,'r'=>0];
+        return max(0, (int)$r['qty_on_hand'] - (int)$r['r']);
+    }
+
+    public static function totalReserved(int $productId, int $warehouseId): int
+    {
+        self::loadReserveCols();
+        $pdo = DB::conn();
+        if (self::hasSplitReserve()) {
+            $st = $pdo->prepare('SELECT COALESCE(qty_reserved_quote,0) + COALESCE(qty_reserved_order,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+            $st->execute([$productId,$warehouseId]);
+            return (int)($st->fetchColumn() ?: 0);
+        }
+        $st = $pdo->prepare('SELECT COALESCE(qty_reserved,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+        $st->execute([$productId,$warehouseId]);
+        return (int)($st->fetchColumn() ?: 0);
+    }
     public static function nextCode(): string
     {
         $st = DB::conn()->query("SELECT LPAD(IFNULL(MAX(CAST(SUBSTRING(code,4) AS UNSIGNED)),0)+1,4,'0') AS seq
@@ -288,7 +350,27 @@ final class Product
                    VALUES (?, ?, 0, ?)
                    ON DUPLICATE KEY UPDATE qty_reserved = GREATEST(0, qty_reserved + VALUES(qty_reserved))')
         ->execute([$productId, $warehouseId, $delta]);
-	}
+    }
+
+    public static function adjustReservedQuote(int $productId, int $warehouseId, int $delta): void
+    {
+        self::loadReserveCols();
+        if (!self::hasSplitReserve()) { self::adjustReserved($productId,$warehouseId,$delta); return; }
+        DB::conn()->prepare('INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved_quote, qty_reserved_order)
+                             VALUES (?, ?, 0, ?, 0)
+                             ON DUPLICATE KEY UPDATE qty_reserved_quote = GREATEST(0, qty_reserved_quote + VALUES(qty_reserved_quote))')
+                  ->execute([$productId, $warehouseId, $delta]);
+    }
+
+    public static function adjustReservedOrder(int $productId, int $warehouseId, int $delta): void
+    {
+        self::loadReserveCols();
+        if (!self::hasSplitReserve()) { self::adjustReserved($productId,$warehouseId,$delta); return; }
+        DB::conn()->prepare('INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved_quote, qty_reserved_order)
+                             VALUES (?, ?, 0, 0, ?)
+                             ON DUPLICATE KEY UPDATE qty_reserved_order = GREATEST(0, qty_reserved_order + VALUES(qty_reserved_order))')
+                  ->execute([$productId, $warehouseId, $delta]);
+    }
 
 public static function consumeFromReservation(int $productId, int $warehouseId, int $qty): void
 {
@@ -300,6 +382,49 @@ public static function consumeFromReservation(int $productId, int $warehouseId, 
         qty_reserved = GREATEST(0, qty_reserved - ?),
         qty_on_hand = GREATEST(0, qty_on_hand - ?)
     ")->execute([$productId, $warehouseId, $qty, $qty]);
+}
+
+public static function consumeFromOrderReservation(int $productId, int $warehouseId, int $qty): void
+{
+    self::loadReserveCols();
+    if (!self::hasSplitReserve()) { self::consumeFromReservation($productId,$warehouseId,$qty); return; }
+    DB::conn()->prepare("
+      INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved_order, qty_reserved_quote)
+      VALUES (?, ?, 0, 0, 0)
+      ON DUPLICATE KEY UPDATE
+        qty_reserved_order = GREATEST(0, qty_reserved_order - ?),
+        qty_on_hand = GREATEST(0, qty_on_hand - ?)
+    ")->execute([$productId, $warehouseId, $qty, $qty]);
+}
+
+public static function transferReserveQuoteToOrder(int $productId, int $warehouseId, int $qty): void
+{
+    self::loadReserveCols();
+    if (!self::hasSplitReserve()) {
+        // No split available — keep single reservation
+        return;
+    }
+    DB::conn()->prepare("
+      INSERT INTO product_stocks (product_id, warehouse_id, qty_on_hand, qty_reserved_quote, qty_reserved_order)
+      VALUES (?, ?, 0, 0, 0)
+      ON DUPLICATE KEY UPDATE
+        qty_reserved_quote = GREATEST(0, qty_reserved_quote - ?),
+        qty_reserved_order = qty_reserved_order + ?
+    ")->execute([$productId, $warehouseId, $qty, $qty]);
+}
+
+public static function reservedOrderQty(int $productId, int $warehouseId): int
+{
+    self::loadReserveCols();
+    $pdo = DB::conn();
+    if (self::hasSplitReserve()) {
+        $st = $pdo->prepare('SELECT COALESCE(qty_reserved_order,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+        $st->execute([$productId,$warehouseId]);
+        return (int)($st->fetchColumn() ?: 0);
+    }
+    $st = $pdo->prepare('SELECT COALESCE(qty_reserved,0) FROM product_stocks WHERE product_id=? AND warehouse_id=?');
+    $st->execute([$productId,$warehouseId]);
+    return (int)($st->fetchColumn() ?: 0);
 }
 public static function canFulfill(int $productId, int $warehouseId, int $qty): bool
 {
