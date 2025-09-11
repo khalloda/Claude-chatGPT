@@ -265,6 +265,9 @@ $router->post('/adjustments', 'adjustmentscontroller@store');
 $router->get('/adjustments/show', 'adjustmentscontroller@show');
 $router->get('/adjustments/print', 'adjustmentscontroller@printnote');
 
+// reservations overview
+$router->get('/reservations', 'reservationscontroller@index');
+
 // Track request performance
 $requestStart = microtime(true);
 

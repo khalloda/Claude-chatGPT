@@ -105,6 +105,7 @@ $menu = [
             ['icon'=>'ti ti-building-warehouse','label'=>'Warehouses','href'=>$u('/warehouses'),'match'=>'/warehouses'],
             ['icon'=>'ti ti-arrows-exchange','label'=>'Transfers','href'=>$u('/transfers'), 'match'=>'/transfers'],
             ['icon'=>'ti ti-adjustments-alt','label'=>'Adjustments','href'=>$u('/adjustments'), 'match'=>'/adjustments'],
+            ['icon'=>'ti ti-bookmark','label'=>'Reservations','href'=>$u('/reservations'), 'match'=>'/reservations'],
             ['icon'=>'ti ti-bookmark','label'=>'Reservations','href'=>$u('/reservations'),  'match'=>'/reservations'],
             ['icon'=>'ti ti-bell','label'=>'Low Stock','href'=>$u('/lowstock'),             'match'=>'/lowstock'],
         ],
