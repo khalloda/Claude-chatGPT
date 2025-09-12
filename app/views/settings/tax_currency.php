@@ -10,6 +10,12 @@ use function App\Core\csrf_field;
     <a class="btn btn-outline-secondary" href="<?= base_url('/') ?>">
       <i class="fas fa-arrow-left"></i> Back
     </a>
+    <a class="btn btn-outline-primary" href="<?= base_url('/settings/tax-rates') ?>">
+      <i class="fas fa-percentage"></i> Manage Tax Rates
+    </a>
+    <a class="btn btn-outline-primary" href="<?= base_url('/settings/currencies') ?>">
+      <i class="fas fa-coins"></i> Manage Currencies
+    </a>
   </div>
 </div>
 

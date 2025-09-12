@@ -241,7 +241,7 @@ function get_default_tax_rate(): float {
     }
 }
 
-function format_currency(float $amount, string $currencyCode = null): string {
+function format_currency(float $amount, ?string $currencyCode = null): string {
     try {
         return \App\Models\Currency::format($amount, $currencyCode);
     } catch (\Throwable $e) {
@@ -249,7 +249,7 @@ function format_currency(float $amount, string $currencyCode = null): string {
     }
 }
 
-function calculate_tax(float $amount, float $rate = null, bool $inclusive = false): array {
+function calculate_tax(float $amount, ?float $rate = null, bool $inclusive = false): array {
     try {
         if ($rate === null) {
             $rate = get_default_tax_rate();
