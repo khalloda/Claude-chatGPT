@@ -149,6 +149,14 @@ $router->post('/customers/delete', 'customerscontroller@destroy');
 $router->get('/customers/show', 'customerscontroller@show'); 
 $router->get('/customers/statement', 'customerscontroller@statement');
 
+// contacts (CRM)
+$router->get('/contacts', 'contactscontroller@index');
+$router->get('/contacts/create', 'contactscontroller@create');
+$router->post('/contacts', 'contactscontroller@store');
+$router->get('/contacts/edit', 'contactscontroller@edit');
+$router->post('/contacts/update', 'contactscontroller@update');
+$router->post('/contacts/delete', 'contactscontroller@destroy');
+
 // quotes
 $router->get('/quotes', 'quotescontroller@index');
 $router->get('/quotes/create', 'quotescontroller@create');
