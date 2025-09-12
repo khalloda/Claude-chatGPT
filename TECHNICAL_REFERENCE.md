@@ -147,10 +147,11 @@ erDiagram
   %% Core domain remains as Current ERD; monitoring objects added
 ```
 
-### Schema Tables (Current)
+### Schema Tables (Current + Recent Additions)
 
 Key tables with columns, constraints, and notable indexes:
 
+**Core Business Tables:**
 - activity_log: id PK; actor(varchar191) not null; action(varchar64); entity_type(varchar64); entity_id(uint); meta(text); created_at(ts default now). Indexes: idx_entity(entity_type,entity_id), idx_action(action).
 - categories: id PK; parent_id(uint) FK->categories.id; name; slug UNIQUE; created_at, updated_at. Index: idx_categories_parent.
 - cogs_entries: id PK; invoice_id uint; product_id uint; warehouse_id uint; qty int; unit_cost dec(12,4); line_cost dec(14,4); created_at. Indexes on invoice_id, product_id, warehouse_id.
@@ -182,7 +183,19 @@ Key tables with columns, constraints, and notable indexes:
 - stock_transfers: id PK; tr_no UNIQUE; from_warehouse_id uint; to_warehouse_id uint; note text; created_at.
 - supplier_payments: id PK; supplier_id uint; purchase_invoice_id uint; paid_at datetime; method; reference; amount dec; note text; created_at. Indexes: idx_sp_supplier, idx_sp_pi, idx_sp_paid_at.
 - suppliers: id PK; name; phone; email; address.
-- users: id PK; email UNIQUE; password_hash; role dflt 'admin'; created_at.
+
+**🎉 NEW: User Management & RBAC Tables (September 2025):**
+- users: id PK; email UNIQUE; password_hash; role dflt 'admin'; **status enum('active','inactive','suspended','pending') dflt 'active'; last_login_at datetime; updated_at timestamp; created_at**.
+- roles: id PK; name varchar(100) UNIQUE; description text; is_active bool dflt 1; created_at, updated_at. Index: idx_roles_active.
+- permissions: id PK; name varchar(100) UNIQUE; slug varchar(100) UNIQUE; description text; category varchar(50) dflt 'general'; created_at, updated_at. Indexes: idx_permissions_category, idx_permissions_slug.
+- role_permissions: PK(role_id,permission_id); role_id uint FK->roles.id CASCADE; permission_id uint FK->permissions.id CASCADE.
+- user_roles: PK(user_id,role_id); user_id uint FK->users.id CASCADE; role_id uint FK->roles.id CASCADE; assigned_by uint; assigned_at datetime dflt now.
+
+**🎉 NEW: Settings & Tax/Currency Management Tables (September 2025):**
+- system_settings: id PK; setting_key varchar(100) UNIQUE; setting_value text; category varchar(50) dflt 'general'; description text; created_at, updated_at. Index: idx_system_settings_key_category.
+- tax_rates: id PK; name varchar(100); rate decimal(5,2); type enum('sales','purchase','vat','service','import','export') dflt 'sales'; is_default bool dflt 0; is_active bool dflt 1; description text; effective_from date; effective_to date; created_at, updated_at. Indexes: idx_tax_rates_type_active, idx_tax_rates_effective.
+- currencies: id PK; code varchar(3) UNIQUE; name varchar(100); symbol varchar(10); exchange_rate decimal(12,6) dflt 1.0; decimal_places tinyint dflt 2; is_base bool dflt 0; is_active bool dflt 1; created_at, updated_at. Indexes: idx_currencies_base, idx_currencies_active.
+- exchange_rate_history: id PK; currency_id uint FK->currencies.id CASCADE; old_rate decimal(12,6); new_rate decimal(12,6); changed_by uint; changed_at datetime dflt now; source varchar(50). Indexes: idx_exchange_history_currency, idx_exchange_history_date.
 
 Notable FK gaps in live schema:
 
@@ -240,33 +253,64 @@ Notable FK gaps in live schema:
 
 Routing in `public/index.php` via custom `Router`. Typical pattern: `METHOD /path -> Controller@action`. Authentication: Most routes expect active session; CSRF required for POST.
 
+**Core System Routes:**
 - Auth: GET `/login` (form), POST `/login`, POST `/logout`
 - CSRF refresh: GET `/csrf-refresh` returns JSON `{ token }`
 - Home/Health: GET `/`, GET `/health`
+
+**🎉 NEW: User Management & RBAC Routes (September 2025):**
+- Users: GET `/users` (list with search/filters), GET `/users/create`, POST `/users/store`, GET `/users/edit`, POST `/users/update`, POST `/users/destroy`, GET `/users/show` (detail view), POST `/users/toggle-status`
+- Roles: GET `/roles`, GET `/roles/create`, POST `/roles/store`, GET `/roles/edit`, POST `/roles/update`, POST `/roles/destroy`
+- Permissions: GET `/permissions`, GET `/permissions/create`, POST `/permissions/store`, GET `/permissions/edit`, POST `/permissions/update`, POST `/permissions/destroy`
+
+**Master Data Management:**
 - Categories: GET `/categories`, GET `/categories/create`, POST `/categories`, GET `/categories/edit`, POST `/categories/update`, POST `/categories/delete`
 - Makes/Models/Warehouses: CRUD as above; warehouse details, CSV export
 - Products: list/create/edit/delete; stock view/update; search and low‑stock via `Product` model
 - Customers: CRUD, `/customers/show`, `/customers/statement`
+
+**Sales Flow:**
 - Quotes: list/create/store/show; POST `/quotes/{cancel|markexpired|createorder|marksent}`; print
 - Orders: list/show/print
-- Notes: POST create/update/delete; tied to entities via `notes` table
 - Invoices: list/show/print; POST `/invoices/create-from-order`, `/invoices/addpayment`, `/invoices/deletepayment`
 - Payments: GET/POST `/payments`, delete
+
+**Purchase Flow:**
 - Suppliers: CRUD, show/statement
 - Purchase Orders/Invoices: full flow, receive `/receipts`, delete receipt, print GRN
 - Supplier Payments (AP): list/create/delete
 - Returns: sales and purchase returns create/print
+
+**🎉 NEW: Settings & Configuration Routes (September 2025):**
+- Main Settings Hub: GET `/settings/tax-currency` (overview and basic configuration)
+- Tax Rate Management: GET `/settings/tax-rates`, POST `/settings/tax-rates/create`, POST `/settings/tax-rates/update`, POST `/settings/tax-rates/delete`
+- Currency Management: GET `/settings/currencies`, POST `/settings/currencies/create`, POST `/settings/currencies/update`
+- Settings Updates: POST `/settings/tax-currency/update`
+
+**Inventory & Reporting:**
 - Reports: `/reports/{ap-aging|ar-aging|inventory-valuation}`
 - Transfers/Adjustments: stock transfer and adjustment flows with printables
+- Notes: POST create/update/delete; tied to entities via `notes` table
 
 Tables touched by major controllers/models:
 
+**Core Business Logic:**
 - Product(s): `products`, `product_stocks`, `categories`, `makes`, `vehicle_models`, `warehouses`
 - Quotes/Orders/Invoices: `quotes`, `quote_items`, `sales_orders`, `sales_order_items`, `invoices`, `invoice_items`, `invoice_payments`
 - AP: `purchase_orders`, `purchase_order_items`, `purchase_invoices`, `receipts`, `supplier_payments`
 - Returns: `sales_returns`, `sales_return_items`, `purchase_returns`, `purchase_return_items`
 - Inventory: `inventory_ledger`, `product_stocks`, `stock_transfers`, `stock_transfer_items`, `stock_adjustments`, `stock_adjustment_items`
-- Others: `customers`, `suppliers`, `notes`, `activity_log`, `doc_sequences`, `users`
+- Others: `customers`, `suppliers`, `notes`, `activity_log`, `doc_sequences`
+
+**🎉 NEW: User Management & RBAC:**
+- UserController: `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `activity_log`
+- AuthController: `users`, `user_roles`, `roles` (enhanced login tracking)
+- RolesController: `roles`, `permissions`, `role_permissions`
+- PermissionsController: `permissions`, `role_permissions`
+
+**🎉 NEW: Settings & Configuration:**
+- SettingsController: `system_settings`, `tax_rates`, `currencies`, `exchange_rate_history`
+- Models: SystemSetting, TaxRate, Currency (with caching and business logic)
 
 ## Security & Compliance
 

@@ -335,6 +335,9 @@ erDiagram
     varchar(191) email
     varchar(255) password_hash
     varchar(20) role
+    enum('active','inactive','suspended','pending') status
+    datetime last_login_at
+    timestamp updated_at
     timestamp created_at
   }
 
@@ -354,6 +357,86 @@ erDiagram
     varchar(191) location
     timestamp created_at
     timestamp updated_at
+  }
+
+  %% NEW: User Management & RBAC Tables (September 2025)
+  roles {
+    int unsigned id PK
+    varchar(100) name
+    text description
+    tinyint(1) is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  permissions {
+    int unsigned id PK
+    varchar(100) name
+    varchar(100) slug
+    text description
+    varchar(50) category
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  role_permissions {
+    int unsigned role_id PK FK
+    int unsigned permission_id PK FK
+  }
+
+  user_roles {
+    int unsigned user_id PK FK
+    int unsigned role_id PK FK
+    int unsigned assigned_by
+    datetime assigned_at
+  }
+
+  %% NEW: Settings & Tax/Currency Management Tables (September 2025)
+  system_settings {
+    int unsigned id PK
+    varchar(100) setting_key
+    text setting_value
+    varchar(50) category
+    text description
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  tax_rates {
+    int unsigned id PK
+    varchar(100) name
+    decimal(5,2) rate
+    enum('sales','purchase','vat','service','import','export') type
+    tinyint(1) is_default
+    tinyint(1) is_active
+    text description
+    date effective_from
+    date effective_to
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  currencies {
+    int unsigned id PK
+    varchar(3) code
+    varchar(100) name
+    varchar(10) symbol
+    decimal(12,6) exchange_rate
+    tinyint decimal_places
+    tinyint(1) is_base
+    tinyint(1) is_active
+    timestamp created_at
+    timestamp updated_at
+  }
+
+  exchange_rate_history {
+    int unsigned id PK
+    int unsigned currency_id FK
+    decimal(12,6) old_rate
+    decimal(12,6) new_rate
+    int unsigned changed_by
+    datetime changed_at
+    varchar(50) source
   }
 
   %% Declared foreign keys per live schema
@@ -378,5 +461,14 @@ erDiagram
 
   sales_order_items }o--|| sales_orders : "sales_order_id -> id"
   sales_orders }o--|| quotes : "quote_id -> id"
+  
+  %% NEW: RBAC Relationships (September 2025)
+  users ||--o{ user_roles : "id -> user_id"
+  roles ||--o{ user_roles : "id -> role_id"
+  roles ||--o{ role_permissions : "id -> role_id"
+  permissions ||--o{ role_permissions : "id -> permission_id"
+  
+  %% NEW: Settings & Currency Relationships (September 2025)
+  currencies ||--o{ exchange_rate_history : "id -> currency_id"
 ```
 
