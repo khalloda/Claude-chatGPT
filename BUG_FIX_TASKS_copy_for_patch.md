@@ -8,7 +8,6 @@ This document tracks issues, analysis, and fixes discovered during testing. The 
 - [ISSUE-0001: Quote allows quantity exceeding stock](#issue-0001-quote-allows-quantity-exceeding-stock)
 - [ISSUE-0002: Sales Order lacks stock validation (Suspicion)](#issue-0002-sales-order-lacks-stock-validation-suspicion)
 - [ISSUE-0003: Available column shows 0 in Quote form](#issue-0003-available-column-shows-0-in-quote-form)
- - [ISSUE-0007: Customer Statement — empty payment ref, no links, date filter ignored](#issue-0007-customer-statement-—-empty-payment-ref-no-links-date-filter-ignored)
 
 ## Pending Issues
 
@@ -147,32 +146,4 @@ Related Issues: TODO
   - Mark Sent reserves quote bucket; Cancel/Expire releases it.
   - Convert Quote?Order transfers to order bucket.
   - Confirm Delivered from Invoice reduces order bucket and on-hand.
-
-### ISSUE-0007: Customer Statement — empty payment ref, no links, date filter ignored
-
-- Issue ID & Title: ISSUE-0007 — Customer Statement: empty payment ref, no linkable refs, and date filter ignored
-- Description: On the Customer Statement page, the Payment Ref column renders blank for payments with no manual reference, the Ref values are not clickable, and transactions outside the selected date range are shown. Screenshot evidence shows rows from 2025-08-29 and 2025-08-30 when filtering 2025-09-01 to 2025-09-12, with empty Payment Ref.
-- Suspected Location: `app/controllers/customerscontroller.php:statement()` — the "Final safety" fallback builds an unbounded list without date filters and omits `ref_id`/`invoice_id` and payment ref fallback; upstream exceptions from `App\Services\CustomerAging::getCustomerStatement()` may trigger this path.
-- Severity: Major
-- Status: Needs Verification
-- Root Cause Analysis:
-  - The controller’s final fallback intentionally ignored date filters and selected recent transactions for the customer. It also selected payment `ref_no` as `p.reference` directly (which can be empty) and did not include `ref_id`/`invoice_id`, preventing links in the view.
-  - When the optimized service throws or returns no rows (e.g., environment/date driver quirks), the controller enters this fallback, yielding the observed behavior: out-of-range rows, blank payment refs, and non-clickable refs.
-- Proposed Fix:
-  - Update the controller fallback to still respect the selected date range and to normalize columns to match the service output: `txn_date, kind, ref_no, debit, credit, ref_id, invoice_id`.
-  - For payments, use `COALESCE(NULLIF(p.reference,''), CONCAT('PMT', LPAD(p.id,6,'0')))` so Payment Ref always shows a value when user reference is absent.
-  - Keep links working in the view via existing logic using `ref_id`/`invoice_id`.
-- Implemented Fix:
-  - Patched `app/controllers/customerscontroller.php` final safety block to:
-    - Apply `from/to` filters (`[from 00:00:00, to +1 day)`),
-    - Include `ref_id` and `invoice_id` for linkability,
-    - Use the payment ref fallback expression for non-empty display,
-    - Sort by `txn_date` and compute running balance.
-  - No change required in the view; it already renders links when IDs are present and uses `ref_no`.
-- Database/Migration Impact: None. The fix only adjusts controller queries and output normalization; `chatgpt2_mi.sql` remains authoritative and unchanged.
-- Related Tests:
-  - Integration: GET `/customers/statement?id={id}&from=2025-09-01&to=2025-09-12` returns only transactions with `txn_date` in range.
-  - Integration: Ensure a payment without `reference` renders `PMT{ID}` in Ref.
-  - UI/E2E: Verify Invoice, Payment (links to its invoice), and Return refs are clickable; verify no August rows appear for a September-only filter.
-  - Regression: Simulate a thrown exception in `CustomerAging::getCustomerStatement` and assert the controller fallback still respects date range and linkability.
 

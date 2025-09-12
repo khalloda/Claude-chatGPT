@@ -223,19 +223,34 @@ final class CustomersController extends Controller
             $opening = 0.0; $rows = []; $running = 0.0;
         }
 
-        // Final safety: if still empty, show recent transactions without date filter
+        // Final safety: if still empty, rebuild with date filters and linkable refs (avoid unbounded list)
         if (!$rows) {
+            $fromStart = $from.' 00:00:00';
+            $toExclusive = date('Y-m-d H:i:s', strtotime($to.' 00:00:00 +1 day'));
+
             $rows = [];
-            $si = $pdo->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit FROM invoices i WHERE i.customer_id=? ORDER BY i.created_at ASC LIMIT 100");
-            $si->execute([$id]); $rows = array_merge($rows, $si->fetchAll(\PDO::FETCH_ASSOC) ?: []);
-            $sp = $pdo->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? ORDER BY p.paid_at ASC LIMIT 100");
-            $sp->execute([$id]); $rows = array_merge($rows, $sp->fetchAll(\PDO::FETCH_ASSOC) ?: []);
-            $srq = $pdo->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? ORDER BY sr.created_at ASC LIMIT 100");
-            $srq->execute([$id]); $rows = array_merge($rows, $srq->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+            // Invoices
+            $si = $pdo->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id, i.id AS invoice_id FROM invoices i WHERE i.customer_id=? AND i.created_at>=? AND i.created_at<? ORDER BY i.created_at ASC LIMIT 500");
+            $si->execute([$id, $fromStart, $toExclusive]);
+            $rows = array_merge($rows, $si->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
+            // Payments (include fallback ref and invoice id for linking)
+            $sp = $pdo->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, COALESCE(NULLIF(p.reference,''), CONCAT('PMT', LPAD(p.id,6,'0'))) AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id, p.invoice_id AS invoice_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at>=? AND p.paid_at<? ORDER BY p.paid_at ASC LIMIT 500");
+            $sp->execute([$id, $fromStart, $toExclusive]);
+            $rows = array_merge($rows, $sp->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
+            // Returns
+            $srq = $pdo->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id, i.id AS invoice_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at>=? AND sr.created_at<? ORDER BY sr.created_at ASC LIMIT 500");
+            $srq->execute([$id, $fromStart, $toExclusive]);
+            $rows = array_merge($rows, $srq->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
             if ($rows) {
-                usort($rows, function($a,$b){ return strcmp($a['txn_date'] ?? '', $b['txn_date'] ?? ''); });
-                $running = 0.0;
-                foreach ($rows as &$r) { $running += (float)($r['debit'] ?? 0) - (float)($r['credit'] ?? 0); $r['running'] = $running; } unset($r);
+                usort($rows, function($a,$b){ return strcmp(($a['txn_date'] ?? ''), ($b['txn_date'] ?? '')); });
+                // If opening is not set by service (e.g., due to exception), keep existing $opening (may be 0.0)
+                $run = (float)($opening ?? 0.0);
+                foreach ($rows as &$r) { $run += (float)($r['debit'] ?? 0) - (float)($r['credit'] ?? 0); $r['running'] = $run; }
+                unset($r);
+                $running = $run;
             }
         }
 
