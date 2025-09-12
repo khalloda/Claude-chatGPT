@@ -136,6 +136,9 @@ $router->post('/products/delete', 'productscontroller@destroy');
 $router->get('/products/stock', 'productscontroller@stock');
 $router->post('/products/stock', 'productscontroller@savestock');
 
+// low stock shortcut (inventory)
+$router->get('/lowstock', 'lowstockcontroller@index');
+
 // customers
 $router->get('/customers', 'customerscontroller@index');
 $router->get('/customers/create', 'customerscontroller@create');
