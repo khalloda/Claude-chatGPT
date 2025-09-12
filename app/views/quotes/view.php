@@ -1,25 +1,30 @@
 <?php
 use function App\Core\base_url;
 use function App\Core\csrf_field;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
-  <h2>Quote <?= htmlspecialchars($q['quote_no'], ENT_QUOTES, 'UTF-8') ?></h2>
-  <p>Status: <strong><?= htmlspecialchars($q['status'], ENT_QUOTES, 'UTF-8') ?></strong></p>
+  <h2><?= $t('quotes.quote') ?> <?= $h($q['quote_no']) ?></h2>
+  <p><?= $t('common.status') ?>: <strong><?= $h($q['status']) ?></strong></p>
   <?php $S = $summary ?? ['subtotal'=>$q['subtotal']??0,'tax_rate'=>$q['tax_rate']??0,'tax_amount'=>$q['tax_amount']??0,'total'=>$q['total']??0]; ?>
   <div style="display:flex; gap:20px; align-items:center; margin:6px 0;">
-    <div>Subtotal: <strong><?= number_format((float)$S['subtotal'],2) ?></strong></div>
-    <div>Tax (<?= number_format((float)$S['tax_rate'],2) ?>%): <strong><?= number_format((float)$S['tax_amount'],2) ?></strong></div>
-    <div>Total: <strong><?= number_format((float)$S['total'],2) ?></strong></div>
+    <div><?= $t('quotes.subtotal') ?>: <strong><?= number_format((float)$S['subtotal'],2) ?></strong></div>
+    <div><?= $t('quotes.tax') ?> (<?= number_format((float)$S['tax_rate'],2) ?>%): <strong><?= number_format((float)$S['tax_amount'],2) ?></strong></div>
+    <div><?= $t('common.total') ?>: <strong><?= number_format((float)$S['total'],2) ?></strong></div>
   </div>
-  <?php if (!empty($q['expires_at'])): ?><p>Expires at: <?= htmlspecialchars($q['expires_at'], ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+  <?php if (!empty($q['expires_at'])): ?><p><?= $t('quotes.expires_at') ?>: <?= $h($q['expires_at']) ?></p><?php endif; ?>
 
   <table style="width:100%;border-collapse:collapse;margin-top:10px;">
     <thead><tr>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Product</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Warehouse</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Qty</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Price</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Line total</th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('quotes.product') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('quotes.warehouse') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('quotes.quantity') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('quotes.price') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('quotes.line_total') ?></th>
     </tr></thead>
     <tbody>
       <?php foreach ($items as $it): ?>

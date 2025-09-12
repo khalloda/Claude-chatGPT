@@ -1,20 +1,28 @@
-<?php /** @var array $rows,$tot */ use function App\Core\base_url; ?>
+<?php 
+/** @var array $rows,$tot */ 
+use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+?>
 <section>
-  <h2>Inventory Valuation (Weighted Avg)</h2>
+  <h2><?= $t('reports.inventory_valuation') ?></h2>
 
   <p class="no-print" style="margin:8px 0;">
-    <a href="<?= base_url('/') ?>" style="margin-right:12px;">Back</a>
-    <button onclick="window.print()" style="padding:6px 10px;border:1px solid #111;border-radius:8px;background:#fff;cursor:pointer;">Print</button>
+    <a href="<?= base_url('/') ?>" style="margin-right:12px;"><?= $t('common.back') ?></a>
+    <button onclick="window.print()" style="padding:6px 10px;border:1px solid #111;border-radius:8px;background:#fff;cursor:pointer;"><?= $t('common.print') ?></button>
   </p>
 
   <table style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:left;">Warehouse</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:left;">Product</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">On hand</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Avg cost</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Value</th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:left;"><?= $t('reports.warehouse') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:left;"><?= $t('reports.product') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.on_hand') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.avg_cost') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.value') ?></th>
       </tr>
     </thead>
     <tbody>

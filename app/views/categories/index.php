@@ -2,9 +2,14 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\flash_get;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
-  <h2>Categories</h2>
+  <h2><?= $t('categories.categories') ?></h2>
 
   <?php if ($msg = flash_get('success')): ?>
     <div style="background:#e7f8ee;border:1px solid #b9e7c9;padding:10px;border-radius:8px;margin:10px 0;">
@@ -18,15 +23,15 @@ use function App\Core\flash_get;
     </div>
   <?php endif; ?>
 
-  <p><a href="<?= base_url('/categories/create') ?>">+ New Category</a></p>
+  <p><a href="<?= base_url('/categories/create') ?>"><?= $t('categories.new_category') ?></a></p>
 
   <table style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
-        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Name</th>
-        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Slug</th>
-        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Parent</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.name') ?></th>
+        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('categories.slug') ?></th>
+        <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('categories.parent') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('common.actions') ?></th>
       </tr>
     </thead>
     <tbody>

@@ -1,16 +1,23 @@
-<?php use function App\Core\base_url; ?>
+<?php 
+use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+?>
 <section>
-  <h2>Purchase Returns (Debit Notes)</h2>
-  <p class="text-muted">Most recent purchase returns across all PIs.</p>
+  <h2><?= $t('purchasereturns.purchase_returns') ?></h2>
+  <p class="text-muted"><?= $t('purchasereturns.most_recent_returns') ?></p>
   <table style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Date</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">PR #</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">PI #</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Supplier</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Total</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('purchasereturns.date') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('purchasereturns.pr_number') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('purchasereturns.pi_number') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('purchasereturns.supplier') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('common.total') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('common.actions') ?></th>
       </tr>
     </thead>
     <tbody>

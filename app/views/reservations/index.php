@@ -1,14 +1,20 @@
 <?php
 use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $rows, $tot_qty, $tot_val */
 ?>
 <section>
-  <h2>Reservations</h2>
-  <p class="text-muted">Shows documents currently holding stock reservations. Quotes reserve when status is Sent. Orders reserve after converting from quotes. Delivery confirmation on invoice releases order reservations.</p>
+  <h2><?= $t('reservations.reservations') ?></h2>
+  <p class="text-muted"><?= $t('reservations.description') ?></p>
 
   <form method="get" action="<?= base_url('/reservations') ?>" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">
     <select name="customer_id" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
-      <option value="">All customers</option>
+      <option value=""><?= $t('reservations.all_customers') ?></option>
       <?php foreach (($filters['customers'] ?? []) as $c): ?>
         <option value="<?= (int)$c['id'] ?>" <?= ((int)($filters['customer_id'] ?? 0) === (int)$c['id'])?'selected':'' ?>>
           <?= htmlspecialchars($c['name'] ?? '',ENT_QUOTES,'UTF-8') ?>
@@ -16,13 +22,13 @@ use function App\Core\base_url;
       <?php endforeach; ?>
     </select>
     <select name="scope" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
-      <option value="">All types</option>
-      <option value="quote" <?= (($filters['scope'] ?? '')==='quote')?'selected':'' ?>>Quotes</option>
-      <option value="order" <?= (($filters['scope'] ?? '')==='order')?'selected':'' ?>>Orders</option>
+      <option value=""><?= $t('reservations.all_types') ?></option>
+      <option value="quote" <?= (($filters['scope'] ?? '')==='quote')?'selected':'' ?>><?= $t('nav.quotes') ?></option>
+      <option value="order" <?= (($filters['scope'] ?? '')==='order')?'selected':'' ?>><?= $t('nav.orders') ?></option>
     </select>
     <input type="date" name="from" value="<?= htmlspecialchars($filters['from'] ?? '',ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
     <input type="date" name="to"   value="<?= htmlspecialchars($filters['to'] ?? '',ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
-    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;">Apply</button>
+    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;"><?= $t('common.apply') ?></button>
     <?php
       $params=[];
       if (!empty($filters['customer_id'])) $params['customer_id']=(int)$filters['customer_id'];

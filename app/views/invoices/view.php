@@ -2,6 +2,12 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\format_note_html;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $i, $items, $payments */
 
 // Load credits total and returns history (controller must pass these; see patch below)
@@ -12,34 +18,34 @@ $balance       = max(0.0, $total - $paid_amount - $credits_total);
 $status        = $i['status'] ?? 'unpaid';
 ?>
 <section>
-  <h2>Invoice <?= htmlspecialchars($i['inv_no'],ENT_QUOTES,'UTF-8') ?></h2>
-  <div>Status: <strong><?= htmlspecialchars($status,ENT_QUOTES,'UTF-8') ?></strong></div>
+  <h2><?= $t('invoices.invoice') ?> <?= $h($i['inv_no']) ?></h2>
+  <div><?= $t('common.status') ?>: <strong><?= $h($status) ?></strong></div>
   <div>
-    Total: <strong><?= number_format($total,2) ?></strong>
-    &nbsp;| Paid: <strong><?= number_format($paid_amount,2) ?></strong>
-    &nbsp;| Credits: <strong><?= number_format($credits_total,2) ?></strong>
-    &nbsp;| Balance: <strong><?= number_format($balance,2) ?></strong>
+    <?= $t('common.total') ?>: <strong><?= number_format($total,2) ?></strong>
+    &nbsp;| <?= $t('invoices.paid') ?>: <strong><?= number_format($paid_amount,2) ?></strong>
+    &nbsp;| <?= $t('invoices.credits') ?>: <strong><?= number_format($credits_total,2) ?></strong>
+    &nbsp;| <?= $t('invoices.balance') ?>: <strong><?= number_format($balance,2) ?></strong>
   </div>
 
   <?php if (!empty($can_confirm_delivery)): ?>
     <form method="post" action="<?= base_url('/invoices/confirm-delivery') ?>" style="margin:10px 0;display:inline-block;">
       <?= csrf_field() ?>
       <input type="hidden" name="invoice_id" value="<?= (int)$i['id'] ?>">
-      <button type="submit" style="padding:6px 10px;border:1px solid #0a0;border-radius:8px;background:#0a0;color:#fff;cursor:pointer;">Confirm Delivered</button>
+      <button type="submit" style="padding:6px 10px;border:1px solid #0a0;border-radius:8px;background:#0a0;color:#fff;cursor:pointer;"><?= $t('invoices.confirm_delivered') ?></button>
     </form>
   <?php endif; ?>
 
   <p style="margin-top:6px;">
-    <a href="<?= base_url('/invoices/print?id='.(int)$i['id']) ?>">Print</a>
+    <a href="<?= base_url('/invoices/print?id='.(int)$i['id']) ?>"><?= $t('invoices.print') ?></a>
   </p>
 
   <table style="width:100%;border-collapse:collapse;margin-top:10px;">
     <thead><tr>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Product</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Warehouse</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Qty</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Unit Price</th>
-      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;">Line Total</th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('invoices.product') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('invoices.warehouse') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('invoices.quantity') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('invoices.unit_price') ?></th>
+      <th style="text-align:right;border-bottom:1px solid #eee;padding:8px;"><?= $t('invoices.line_total') ?></th>
     </tr></thead>
     <tbody>
       <?php foreach ($items as $it): ?>

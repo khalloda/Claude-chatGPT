@@ -1,31 +1,37 @@
 <?php
 use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $supplier,$po_list,$receipt_items,$pi_list,$spayments; @var float $ap_balance,$inv_total,$pay_total,$ret_total */
 ?>
 <section>
-  <h2>Supplier — <?= htmlspecialchars($supplier['name'] ?? '',ENT_QUOTES,'UTF-8') ?></h2>
+  <h2><?= $t('suppliers.supplier') ?> — <?= $h($supplier['name'] ?? '') ?></h2>
   <p>
-    <strong>Phone:</strong> <?= htmlspecialchars($supplier['phone'] ?? '',ENT_QUOTES,'UTF-8') ?> ·
-    <strong>Email:</strong> <?= htmlspecialchars($supplier['email'] ?? '',ENT_QUOTES,'UTF-8') ?> ·
-    <strong>Address:</strong> <?= htmlspecialchars($supplier['address'] ?? '',ENT_QUOTES,'UTF-8') ?>
+    <strong><?= $t('common.phone') ?>:</strong> <?= $h($supplier['phone'] ?? '') ?> ·
+    <strong><?= $t('common.email') ?>:</strong> <?= $h($supplier['email'] ?? '') ?> ·
+    <strong><?= $t('common.address') ?>:</strong> <?= $h($supplier['address'] ?? '') ?>
   </p>
   <p>
-    <strong>AP Totals</strong> — Invoices: <?= number_format($inv_total,2) ?> ·
-    Payments: <?= number_format($pay_total,2) ?> ·
-    Credits: <?= number_format($ret_total,2) ?> ·
-    <strong>Balance:</strong> <?= number_format($ap_balance,2) ?>
+    <strong><?= $t('suppliers.ap_totals') ?></strong> — <?= $t('suppliers.invoices') ?>: <?= number_format($inv_total,2) ?> ·
+    <?= $t('suppliers.payments') ?>: <?= number_format($pay_total,2) ?> ·
+    <?= $t('suppliers.credits') ?>: <?= number_format($ret_total,2) ?> ·
+    <strong><?= $t('suppliers.balance') ?>:</strong> <?= number_format($ap_balance,2) ?>
   </p>
   <p>
-    <a class="button" href="<?= base_url('/suppliers/statement?id='.(int)$supplier['id']) ?>">View Statement</a>
-    · <a href="<?= base_url('/suppliers') ?>">Back to Suppliers</a>
+    <a class="button" href="<?= base_url('/suppliers/statement?id='.(int)$supplier['id']) ?>"><?= $t('suppliers.view_statement') ?></a>
+    · <a href="<?= base_url('/suppliers') ?>"><?= $t('suppliers.back_to_suppliers') ?></a>
   </p>
 
   <div class="tabs">
     <div class="tabbar">
-      <button data-tab="pos" class="active">Purchase Orders</button>
-      <button data-tab="receipts">Delivered Items (Receipts)</button>
-      <button data-tab="pis">Purchase Invoices</button>
-      <button data-tab="payments">Payments (AP)</button>
+      <button data-tab="pos" class="active"><?= $t('suppliers.purchase_orders') ?></button>
+      <button data-tab="receipts"><?= $t('suppliers.delivered_items') ?></button>
+      <button data-tab="pis"><?= $t('suppliers.purchase_invoices') ?></button>
+      <button data-tab="payments"><?= $t('suppliers.payments_ap') ?></button>
     </div>
 
     <div class="tabcontent" id="tab-pos" style="display:block;">

@@ -2,12 +2,16 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\flash_get;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
 $h = fn($v)=>htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
   <div class="page-header">
-    <div class="title">Warehouses</div>
-    <a class="ms-auto btn btn-sm btn-primary" href="<?= base_url('/warehouses/create') ?>">+ New Warehouse</a>
+    <div class="title"><?= $t('nav.warehouses') ?></div>
+    <a class="ms-auto btn btn-sm btn-primary" href="<?= base_url('/warehouses/create') ?>"><?= $t('warehouses.new_warehouse') ?></a>
   </div>
 
   <?php if ($m = flash_get('success')): ?>
@@ -23,13 +27,13 @@ $h = fn($v)=>htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>Location</th>
-              <th class="text-end">On hand</th>
-              <th class="text-end">Reserved</th>
-              <th class="text-end">Value</th>
-              <th class="text-end">Actions</th>
+              <th><?= $t('warehouses.code') ?></th>
+              <th><?= $t('common.name') ?></th>
+              <th><?= $t('warehouses.location') ?></th>
+              <th class="text-end"><?= $t('warehouses.on_hand') ?></th>
+              <th class="text-end"><?= $t('warehouses.reserved') ?></th>
+              <th class="text-end"><?= $t('warehouses.value') ?></th>
+              <th class="text-end"><?= $t('common.actions') ?></th>
             </tr>
           </thead>
           <tbody>

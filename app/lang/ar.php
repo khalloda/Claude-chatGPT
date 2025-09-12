@@ -565,6 +565,328 @@ return [
     'products.stock'           => 'المخزون',
     'products.delete_confirm'  => 'حذف هذا المنتج؟',
     'products.no_products'     => 'لا توجد منتجات بعد.',
+
+    /* =========================
+     * Customers
+     * ========================= */
+    'customers.new_customer'   => '+ عميل جديد',
+    'customers.edit_customer'  => 'تعديل العميل',
+    'customers.customer'       => 'العميل',
+    'customers.statement'      => 'كشف الحساب',
+    'customers.delete_confirm' => 'حذف هذا العميل؟',
+    'customers.no_customers'   => 'لا يوجد عملاء بعد.',
+    'customers.ar_totals'      => 'إجمالي الذمم المدينة',
+    'customers.invoices'       => 'الفواتير',
+    'customers.payments'       => 'المدفوعات',
+    'customers.credits'        => 'الائتمانات',
+    'customers.balance'        => 'الرصيد',
+    'customers.view_statement' => 'عرض كشف الحساب',
+    'customers.back_to_customers' => 'العودة للعملاء',
+    'customers.sales_orders'   => 'أوامر البيع',
+
+    /* =========================
+     * Invoices
+     * ========================= */
+    'invoices.invoice_number'  => 'رقم الفاتورة',
+    'invoices.customer'        => 'العميل',
+    'invoices.paid'           => 'مدفوع',
+    'invoices.no_invoices'    => 'لا توجد فواتير بعد.',
+    'invoices.invoice'        => 'الفاتورة',
+    'invoices.credits'        => 'الائتمانات',
+    'invoices.balance'        => 'الرصيد',
+    'invoices.confirm_delivered' => 'تأكيد التسليم',
+    'invoices.print'          => 'طباعة',
+    'invoices.product'        => 'المنتج',
+    'invoices.warehouse'      => 'المستودع',
+    'invoices.quantity'       => 'الكمية',
+    'invoices.unit_price'     => 'سعر الوحدة',
+    'invoices.line_total'     => 'إجمالي السطر',
+
+    /* =========================
+     * Orders
+     * ========================= */
+    'orders.order_number'     => 'رقم الطلب',
+    'orders.customer'         => 'العميل',
+    'orders.no_orders'        => 'لا توجد طلبات بعد.',
+    'orders.sales_order'      => 'طلب البيع',
+    'orders.create_invoice'   => 'إنشاء فاتورة',
+    'orders.print'            => 'طباعة',
+    'orders.back_to_orders'   => 'العودة للطلبات',
+    'orders.product'          => 'المنتج',
+    'orders.warehouse'        => 'المستودع',
+    'orders.quantity'         => 'الكمية',
+    'orders.unit_price'       => 'سعر الوحدة',
+    'orders.line_total'       => 'إجمالي السطر',
+
+    /* =========================
+     * Quotes
+     * ========================= */
+    'quotes.new_quote'        => '+ عرض سعر جديد',
+    'quotes.quote_number'     => 'رقم العرض',
+    'quotes.customer'         => 'العميل',
+    'quotes.no_quotes'        => 'لا توجد عروض أسعار بعد.',
+    'quotes.quote'            => 'عرض السعر',
+    'quotes.subtotal'         => 'المجموع الفرعي',
+    'quotes.tax'              => 'الضريبة',
+    'quotes.expires_at'       => 'ينتهي في',
+    'quotes.product'          => 'المنتج',
+    'quotes.warehouse'        => 'المستودع',
+    'quotes.quantity'         => 'الكمية',
+    'quotes.price'            => 'السعر',
+    'quotes.line_total'       => 'إجمالي السطر',
+
+    /* =========================
+     * Suppliers
+     * ========================= */
+    'suppliers.back_to_purchase_orders' => 'العودة لأوامر الشراء',
+    'suppliers.balance'       => 'الرصيد',
+    'suppliers.statement'     => 'كشف الحساب',
+    'suppliers.no_suppliers'  => 'لا يوجد موردون.',
+    'suppliers.new_supplier'  => 'مورد جديد',
+    'suppliers.edit_supplier' => 'تعديل المورد',
+    'suppliers.supplier'      => 'المورد',
+    'suppliers.ap_totals'     => 'إجمالي الذمم الدائنة',
+    'suppliers.invoices'      => 'الفواتير',
+    'suppliers.payments'      => 'المدفوعات',
+    'suppliers.credits'       => 'الائتمانات',
+    'suppliers.view_statement' => 'عرض كشف الحساب',
+    'suppliers.back_to_suppliers' => 'العودة للموردين',
+    'suppliers.purchase_orders' => 'أوامر الشراء',
+    'suppliers.delivered_items' => 'العناصر المسلمة (الإيصالات)',
+    'suppliers.purchase_invoices' => 'فواتير الشراء',
+    'suppliers.payments_ap'   => 'المدفوعات (ذمم دائنة)',
+
+    /* =========================
+     * Warehouses
+     * ========================= */
+    'warehouses.new_warehouse' => '+ مستودع جديد',
+    'warehouses.edit_warehouse' => 'تعديل المستودع',
+    'warehouses.code'         => 'الكود',
+    'warehouses.location'     => 'الموقع',
+    'warehouses.location_optional' => 'الموقع (اختياري)',
+    'warehouses.on_hand'      => 'متوفر',
+    'warehouses.reserved'     => 'محجوز',
+    'warehouses.value'        => 'القيمة',
+
+    /* =========================
+     * Payments
+     * ========================= */
+    'payments.back_to_invoices' => 'العودة للفواتير',
+    'payments.date'           => 'التاريخ',
+    'payments.payment_number' => 'رقم الدفع',
+    'payments.invoice'        => 'الفاتورة',
+    'payments.customer'       => 'العميل',
+    'payments.method'         => 'الطريقة',
+    'payments.reference'      => 'المرجع',
+    'payments.amount'         => 'المبلغ',
+    'payments.new_for_invoice' => 'جديد لهذه الفاتورة',
+    'payments.no_payments'    => 'لا توجد مدفوعات بعد.',
+    'payments.new_payment'    => 'دفع جديد',
+    'payments.paid'           => 'مدفوع',
+    'payments.note'           => 'ملاحظة',
+    'payments.save_payment'   => 'حفظ الدفع',
+    'payments.back_to_invoice' => 'العودة للفاتورة',
+    'payments.payments_list'  => 'قائمة المدفوعات',
+
+    /* =========================
+     * Reports
+     * ========================= */
+    'reports.sales_report'    => 'تقرير المبيعات',
+    'reports.ar_aging'        => 'تقدم الذمم المدينة',
+    'reports.from'            => 'من',
+    'reports.to'              => 'إلى',
+    'reports.as_of'           => 'حتى',
+    'reports.apply'           => 'تطبيق',
+    'reports.print'           => 'طباعة',
+    'reports.total_invoices'  => 'إجمالي الفواتير',
+    'reports.total_returns'   => 'إجمالي المرتجعات',
+    'reports.net_sales'       => 'صافي المبيعات',
+    'reports.payments_received' => 'المدفوعات المستلمة',
+    'reports.date'            => 'التاريخ',
+    'reports.type'            => 'النوع',
+    'reports.reference'       => 'المرجع',
+    'reports.customer'        => 'العميل',
+    'reports.debit'           => 'مدين',
+    'reports.credit'          => 'دائن',
+    'reports.age_0_30'        => '0–30',
+    'reports.age_31_60'       => '31–60',
+    'reports.age_61_90'       => '61–90',
+    'reports.age_90_plus'     => '90+',
+
+    /* =========================
+     * Sales Returns
+     * ========================= */
+    'salesreturns.credit_notes' => 'إشعارات الائتمان (مرتجعات المبيعات)',
+    'salesreturns.back_to_invoices' => 'العودة للفواتير',
+    'salesreturns.credit_number' => 'رقم الائتمان',
+    'salesreturns.invoice_number' => 'رقم الفاتورة',
+    'salesreturns.customer'   => 'العميل',
+    'salesreturns.date'       => 'التاريخ',
+    'salesreturns.no_credit_notes' => 'لا توجد إشعارات ائتمان بعد.',
+
+    /* =========================
+     * Purchase Orders
+     * ========================= */
+    'purchaseorders.purchase_orders' => 'أوامر الشراء',
+    'purchaseorders.new_po'   => 'أمر شراء جديد',
+    'purchaseorders.po_number' => 'رقم أمر الشراء',
+    'purchaseorders.supplier' => 'المورد',
+    'purchaseorders.no_purchase_orders' => 'لا توجد أوامر شراء بعد.',
+
+    /* =========================
+     * Categories
+     * ========================= */
+    'categories.categories'   => 'الفئات',
+    'categories.new_category' => '+ فئة جديدة',
+    'categories.slug'         => 'المعرف',
+    'categories.parent'       => 'الفئة الأب',
+
+    /* =========================
+     * User Management
+     * ========================= */
+    'users.roles'             => 'الأدوار',
+    'users.new_role'          => 'دور جديد',
+    'users.slug'              => 'المعرف',
+    'users.delete_role_confirm' => 'حذف هذا الدور؟',
+    'users.no_roles'          => 'لا توجد أدوار.',
+
+    /* =========================
+     * Purchase Invoices
+     * ========================= */
+    'purchaseinvoices.purchase_invoices' => 'فواتير الشراء',
+    'purchaseinvoices.back_to_purchase_orders' => 'العودة لأوامر الشراء',
+    'purchaseinvoices.pi_number' => 'رقم فاتورة الشراء',
+    'purchaseinvoices.supplier' => 'المورد',
+    'purchaseinvoices.po_number' => 'رقم أمر الشراء',
+    'purchaseinvoices.no_purchase_invoices' => 'لا توجد فواتير شراء بعد.',
+
+    /* =========================
+     * Makes & Models
+     * ========================= */
+    'makes.makes'             => 'العلامات التجارية',
+    'makes.new_make'          => '+ علامة تجارية جديدة',
+    'makes.slug'              => 'المعرف',
+    'models.models'           => 'الموديلات',
+    'models.filter_by_make'   => 'تصفية حسب العلامة التجارية',
+    'models.new_model'        => '+ موديل جديد',
+
+    /* =========================
+     * Stock Transfers
+     * ========================= */
+    'transfers.stock_transfers' => 'تحويلات المخزون',
+    'transfers.new_transfer'  => 'تحويل جديد',
+    'transfers.tr_number'     => 'رقم التحويل',
+    'transfers.date'          => 'التاريخ',
+    'transfers.from'          => 'من',
+    'transfers.to'            => 'إلى',
+    'transfers.open'          => 'فتح',
+    'transfers.no_transfers'  => 'لا توجد تحويلات بعد.',
+
+    /* =========================
+     * Goods Receipts
+     * ========================= */
+    'receipts.goods_receipts' => 'إيصالات البضائع (GRN)',
+    'receipts.most_recent_receipts' => 'أحدث الإيصالات عبر جميع فواتير الشراء.',
+    'receipts.date'          => 'التاريخ',
+    'receipts.pi_number'     => 'رقم فاتورة الشراء',
+    'receipts.product'       => 'المنتج',
+    'receipts.warehouse'     => 'المستودع',
+    'receipts.quantity'      => 'الكمية',
+    'receipts.unit_cost'     => 'تكلفة الوحدة',
+
+    /* =========================
+     * Purchase Returns
+     * ========================= */
+    'purchasereturns.purchase_returns' => 'مرتجعات الشراء (إشعارات الخصم)',
+    'purchasereturns.most_recent_returns' => 'أحدث مرتجعات الشراء عبر جميع فواتير الشراء.',
+    'purchasereturns.date'   => 'التاريخ',
+    'purchasereturns.pr_number' => 'رقم مرتجع الشراء',
+    'purchasereturns.pi_number' => 'رقم فاتورة الشراء',
+    'purchasereturns.supplier' => 'المورد',
+
+    /* =========================
+     * Supplier Payments
+     * ========================= */
+    'supplierpayments.supplier_payments' => 'مدفوعات الموردين',
+    'supplierpayments.back_to_purchase_invoices' => 'العودة لفواتير الشراء',
+    'supplierpayments.date'  => 'التاريخ',
+    'supplierpayments.supplier' => 'المورد',
+    'supplierpayments.pi_number' => 'رقم فاتورة الشراء',
+    'supplierpayments.method' => 'الطريقة',
+    'supplierpayments.reference' => 'المرجع',
+    'supplierpayments.amount' => 'المبلغ',
+    'supplierpayments.no_supplier_payments' => 'لا توجد مدفوعات موردين بعد.',
+
+    /* =========================
+     * Stock Adjustments
+     * ========================= */
+    'adjustments.stock_adjustments' => 'تعديلات المخزون',
+    'adjustments.new_adjustment' => 'تعديل جديد',
+    'adjustments.ad_number'  => 'رقم التعديل',
+    'adjustments.date'       => 'التاريخ',
+    'adjustments.warehouse'  => 'المستودع',
+    'adjustments.reason'     => 'السبب',
+    'adjustments.open'       => 'فتح',
+    'adjustments.no_adjustments' => 'لا توجد تعديلات بعد.',
+
+    /* =========================
+     * Reservations
+     * ========================= */
+    'reservations.reservations' => 'الحجوزات',
+    'reservations.description' => 'يعرض المستندات التي تحتفظ بحجوزات المخزون حالياً. العروض تحجز عند إرسالها. الطلبات تحجز بعد التحويل من العروض. تأكيد التسليم في الفاتورة يحرر حجوزات الطلبات.',
+    'reservations.all_customers' => 'جميع العملاء',
+    'reservations.all_types' => 'جميع الأنواع',
+
+    /* =========================
+     * Low Stock
+     * ========================= */
+    'lowstock.low_stock' => 'مخزون منخفض',
+    'lowstock.threshold' => 'الحد الأدنى',
+    'lowstock.warehouse' => 'المستودع',
+    'lowstock.product' => 'المنتج',
+    'lowstock.on_hand' => 'متوفر',
+    'lowstock.reserved' => 'محجوز',
+    'lowstock.available' => 'متاح',
+
+    /* =========================
+     * Contacts
+     * ========================= */
+    'contacts.contacts' => 'جهات الاتصال',
+    'contacts.search_placeholder' => 'البحث بالاسم/البريد الإلكتروني/الهاتف',
+    'contacts.all_customers' => 'جميع العملاء',
+    'contacts.new_contact' => '+ جهة اتصال جديدة',
+    'contacts.title' => 'المسمى الوظيفي',
+    'contacts.client' => 'العميل',
+
+    /* =========================
+     * Additional Reports
+     * ========================= */
+    'reports.purchasing_report' => 'تقرير المشتريات',
+    'reports.from' => 'من',
+    'reports.to' => 'إلى',
+    'reports.total_purchases' => 'إجمالي المشتريات',
+    'reports.total_purchase_returns' => 'إجمالي مرتجعات المشتريات',
+    'reports.net_purchases' => 'صافي المشتريات',
+    'reports.supplier_payments' => 'مدفوعات الموردين',
+    'reports.date' => 'التاريخ',
+    'reports.type' => 'النوع',
+    'reports.reference' => 'المرجع',
+    'reports.supplier' => 'المورد',
+    'reports.debit' => 'مدين',
+    'reports.credit' => 'دائن',
+    'reports.inventory_valuation' => 'تقييم المخزون (متوسط مرجح)',
+    'reports.warehouse' => 'المستودع',
+    'reports.product' => 'المنتج',
+    'reports.on_hand' => 'متوفر',
+    'reports.avg_cost' => 'متوسط التكلفة',
+    'reports.value' => 'القيمة',
+    'reports.ap_aging' => 'تقرير أعمار الحسابات الدائنة',
+    'reports.as_of' => 'اعتباراً من',
+    'reports.0_30_days' => '0–30',
+    'reports.31_60_days' => '31–60',
+    'reports.61_90_days' => '61–90',
+    'reports.90_plus_days' => '90+',
+
     'common.all'               => 'الكل',
     'common.none'              => 'لا شيء',
     'common.loading'           => 'جاري التحميل...',

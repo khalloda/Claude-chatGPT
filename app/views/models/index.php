@@ -2,9 +2,14 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\flash_get;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
-  <h2>Models</h2>
+  <h2><?= $t('models.models') ?></h2>
 
   <?php if ($m = flash_get('success')): ?>
     <div style="background:#e7f8ee;border:1px solid #b9e7c9;padding:10px;border-radius:8px;margin:10px 0;"><?= htmlspecialchars($m, ENT_QUOTES, 'UTF-8') ?></div>
@@ -16,9 +21,9 @@ use function App\Core\flash_get;
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
     <form method="get" action="<?= base_url('/models') ?>">
       <label>
-        Filter by make:
+        <?= $t('models.filter_by_make') ?>:
         <select name="make_id" onchange="this.form.submit()" style="padding:6px;border:1px solid #ddd;border-radius:6px;">
-          <option value="">All</option>
+          <option value=""><?= $t('common.all') ?></option>
           <?php foreach ($makes as $mk): ?>
             <option value="<?= (int)$mk['id'] ?>" <?php if (!empty($selected_make) && (int)$selected_make === (int)$mk['id']) echo 'selected'; ?>>
               <?= htmlspecialchars($mk['name'], ENT_QUOTES, 'UTF-8') ?>
@@ -27,7 +32,7 @@ use function App\Core\flash_get;
         </select>
       </label>
     </form>
-    <a href="<?= base_url('/models/create') ?>">+ New Model</a>
+    <a href="<?= base_url('/models/create') ?>"><?= $t('models.new_model') ?></a>
   </div>
 
   <table style="width:100%;border-collapse:collapse;">

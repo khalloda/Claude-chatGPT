@@ -1,17 +1,24 @@
-<?php use function App\Core\base_url; ?>
+<?php 
+use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+?>
 <section>
-  <h2>Goods Receipts (GRN)</h2>
-  <p class="text-muted">Most recent receipts across all Purchase Invoices.</p>
+  <h2><?= $t('receipts.goods_receipts') ?></h2>
+  <p class="text-muted"><?= $t('receipts.most_recent_receipts') ?></p>
   <table style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Date</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">PI #</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Product</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Warehouse</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Qty</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Unit Cost</th>
-        <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('receipts.date') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('receipts.pi_number') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('receipts.product') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('receipts.warehouse') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('receipts.quantity') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('receipts.unit_cost') ?></th>
+        <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('common.actions') ?></th>
       </tr>
     </thead>
     <tbody>

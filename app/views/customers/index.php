@@ -2,21 +2,26 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\flash_get;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
-  <h2>Customers</h2>
+  <h2><?= $t('nav.customers') ?></h2>
 
   <?php if ($m = flash_get('success')): ?><div style="background:#e7f8ee;border:1px solid #b9e7c9;padding:10px;border-radius:8px;margin:10px 0;"><?= htmlspecialchars($m, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
   <?php if ($m = flash_get('error')): ?><div style="background:#ffe9e9;border:1px solid #ffb3b3;padding:10px;border-radius:8px;margin:10px 0;"><?= htmlspecialchars($m, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 
-  <p><a href="<?= base_url('/customers/create') ?>">+ New Customer</a></p>
+  <p><a href="<?= base_url('/customers/create') ?>"><?= $t('customers.new_customer') ?></a></p>
 
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Name</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Phone</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Email</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.name') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.phone') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.email') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('common.actions') ?></th>
     </tr></thead>
     <tbody>
       <?php foreach ($items as $c): ?>
@@ -25,17 +30,17 @@ use function App\Core\flash_get;
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;"><?= htmlspecialchars($c['phone'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;"><?= htmlspecialchars($c['email'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
           <td style="border-bottom:1px solid #f2f2f4;padding:8px;">
-             <a href="<?= base_url('/customers/show?id='.(int)$c['id']) ?>">View</a> ·
-			 <a href="<?= base_url('/customers/edit?id='.(int)$c['id']) ?>">Edit</a> &nbsp;|&nbsp;
-			 <a href="<?= base_url('/customers/statement?id='.(int)$c['id'].'&from='.date('Y-m-01').'&to='.date('Y-m-d')) ?>">Statement</a>
-            <form method="post" action="<?= base_url('/customers/delete') ?>" style="display:inline" onsubmit="return confirm('Delete this customer?');">
+             <a href="<?= base_url('/customers/show?id='.(int)$c['id']) ?>"><?= $t('common.view') ?></a> ·
+			 <a href="<?= base_url('/customers/edit?id='.(int)$c['id']) ?>"><?= $t('common.edit') ?></a> &nbsp;|&nbsp;
+			 <a href="<?= base_url('/customers/statement?id='.(int)$c['id'].'&from='.date('Y-m-01').'&to='.date('Y-m-d')) ?>"><?= $t('customers.statement') ?></a>
+            <form method="post" action="<?= base_url('/customers/delete') ?>" style="display:inline" onsubmit="return confirm('<?= $t('customers.delete_confirm') ?>');">
               <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-              <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;">Delete</button>
+              <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;"><?= $t('common.delete') ?></button>
             </form>
           </td>
         </tr>
       <?php endforeach; ?>
-      <?php if (!$items): ?><tr><td colspan="4" style="padding:12px;">No customers yet.</td></tr><?php endif; ?>
+      <?php if (!$items): ?><tr><td colspan="4" style="padding:12px;"><?= $t('customers.no_customers') ?></td></tr><?php endif; ?>
     </tbody>
   </table>
 </section>

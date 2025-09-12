@@ -566,6 +566,328 @@ return [
     'products.stock'           => 'Stock',
     'products.delete_confirm'  => 'Delete this product?',
     'products.no_products'     => 'No products yet.',
+
+    /* =========================
+     * Customers
+     * ========================= */
+    'customers.new_customer'   => '+ New Customer',
+    'customers.edit_customer'  => 'Edit Customer',
+    'customers.customer'       => 'Customer',
+    'customers.statement'      => 'Statement',
+    'customers.delete_confirm' => 'Delete this customer?',
+    'customers.no_customers'   => 'No customers yet.',
+    'customers.ar_totals'      => 'AR Totals',
+    'customers.invoices'       => 'Invoices',
+    'customers.payments'       => 'Payments',
+    'customers.credits'        => 'Credits',
+    'customers.balance'        => 'Balance',
+    'customers.view_statement' => 'View Statement',
+    'customers.back_to_customers' => 'Back to Customers',
+    'customers.sales_orders'   => 'Sales Orders',
+
+    /* =========================
+     * Invoices
+     * ========================= */
+    'invoices.invoice_number'  => 'Invoice #',
+    'invoices.customer'        => 'Customer',
+    'invoices.paid'           => 'Paid',
+    'invoices.no_invoices'    => 'No invoices yet.',
+    'invoices.invoice'        => 'Invoice',
+    'invoices.credits'        => 'Credits',
+    'invoices.balance'        => 'Balance',
+    'invoices.confirm_delivered' => 'Confirm Delivered',
+    'invoices.print'          => 'Print',
+    'invoices.product'        => 'Product',
+    'invoices.warehouse'      => 'Warehouse',
+    'invoices.quantity'       => 'Qty',
+    'invoices.unit_price'     => 'Unit Price',
+    'invoices.line_total'     => 'Line Total',
+
+    /* =========================
+     * Orders
+     * ========================= */
+    'orders.order_number'     => 'Order #',
+    'orders.customer'         => 'Customer',
+    'orders.no_orders'        => 'No orders yet.',
+    'orders.sales_order'      => 'Sales Order',
+    'orders.create_invoice'   => 'Create Invoice',
+    'orders.print'            => 'Print',
+    'orders.back_to_orders'   => 'Back to Orders',
+    'orders.product'          => 'Product',
+    'orders.warehouse'        => 'Warehouse',
+    'orders.quantity'         => 'Qty',
+    'orders.unit_price'       => 'Unit Price',
+    'orders.line_total'       => 'Line Total',
+
+    /* =========================
+     * Quotes
+     * ========================= */
+    'quotes.new_quote'        => '+ New Quote',
+    'quotes.quote_number'     => 'Quote #',
+    'quotes.customer'         => 'Customer',
+    'quotes.no_quotes'        => 'No quotes yet.',
+    'quotes.quote'            => 'Quote',
+    'quotes.subtotal'         => 'Subtotal',
+    'quotes.tax'              => 'Tax',
+    'quotes.expires_at'       => 'Expires at',
+    'quotes.product'          => 'Product',
+    'quotes.warehouse'        => 'Warehouse',
+    'quotes.quantity'         => 'Qty',
+    'quotes.price'            => 'Price',
+    'quotes.line_total'       => 'Line total',
+
+    /* =========================
+     * Suppliers
+     * ========================= */
+    'suppliers.back_to_purchase_orders' => 'Back to Purchase Orders',
+    'suppliers.balance'       => 'Balance',
+    'suppliers.statement'     => 'Statement',
+    'suppliers.no_suppliers'  => 'No suppliers found.',
+    'suppliers.new_supplier'  => 'New Supplier',
+    'suppliers.edit_supplier' => 'Edit Supplier',
+    'suppliers.supplier'      => 'Supplier',
+    'suppliers.ap_totals'     => 'AP Totals',
+    'suppliers.invoices'      => 'Invoices',
+    'suppliers.payments'      => 'Payments',
+    'suppliers.credits'       => 'Credits',
+    'suppliers.view_statement' => 'View Statement',
+    'suppliers.back_to_suppliers' => 'Back to Suppliers',
+    'suppliers.purchase_orders' => 'Purchase Orders',
+    'suppliers.delivered_items' => 'Delivered Items (Receipts)',
+    'suppliers.purchase_invoices' => 'Purchase Invoices',
+    'suppliers.payments_ap'   => 'Payments (AP)',
+
+    /* =========================
+     * Warehouses
+     * ========================= */
+    'warehouses.new_warehouse' => '+ New Warehouse',
+    'warehouses.edit_warehouse' => 'Edit Warehouse',
+    'warehouses.code'         => 'Code',
+    'warehouses.location'     => 'Location',
+    'warehouses.location_optional' => 'Location (optional)',
+    'warehouses.on_hand'      => 'On hand',
+    'warehouses.reserved'     => 'Reserved',
+    'warehouses.value'        => 'Value',
+
+    /* =========================
+     * Payments
+     * ========================= */
+    'payments.back_to_invoices' => 'Back to Invoices',
+    'payments.date'           => 'Date',
+    'payments.payment_number' => 'Payment #',
+    'payments.invoice'        => 'Invoice',
+    'payments.customer'       => 'Customer',
+    'payments.method'         => 'Method',
+    'payments.reference'      => 'Ref',
+    'payments.amount'         => 'Amount',
+    'payments.new_for_invoice' => 'New for this invoice',
+    'payments.no_payments'    => 'No payments yet.',
+    'payments.new_payment'    => 'New Payment',
+    'payments.paid'           => 'Paid',
+    'payments.note'           => 'Note',
+    'payments.save_payment'   => 'Save Payment',
+    'payments.back_to_invoice' => 'Back to Invoice',
+    'payments.payments_list'  => 'Payments list',
+
+    /* =========================
+     * Reports
+     * ========================= */
+    'reports.sales_report'    => 'Sales Report',
+    'reports.ar_aging'        => 'AR Aging',
+    'reports.from'            => 'From',
+    'reports.to'              => 'To',
+    'reports.as_of'           => 'As of',
+    'reports.apply'           => 'Apply',
+    'reports.print'           => 'Print',
+    'reports.total_invoices'  => 'Total Invoices',
+    'reports.total_returns'   => 'Total Returns',
+    'reports.net_sales'       => 'Net Sales',
+    'reports.payments_received' => 'Payments Received',
+    'reports.date'            => 'Date',
+    'reports.type'            => 'Type',
+    'reports.reference'       => 'Ref',
+    'reports.customer'        => 'Customer',
+    'reports.debit'           => 'Debit',
+    'reports.credit'          => 'Credit',
+    'reports.age_0_30'        => '0–30',
+    'reports.age_31_60'       => '31–60',
+    'reports.age_61_90'       => '61–90',
+    'reports.age_90_plus'     => '90+',
+
+    /* =========================
+     * Sales Returns
+     * ========================= */
+    'salesreturns.credit_notes' => 'Credit Notes (Sales Returns)',
+    'salesreturns.back_to_invoices' => 'Back to Invoices',
+    'salesreturns.credit_number' => 'Credit #',
+    'salesreturns.invoice_number' => 'Invoice #',
+    'salesreturns.customer'   => 'Customer',
+    'salesreturns.date'       => 'Date',
+    'salesreturns.no_credit_notes' => 'No credit notes yet.',
+
+    /* =========================
+     * Purchase Orders
+     * ========================= */
+    'purchaseorders.purchase_orders' => 'Purchase Orders',
+    'purchaseorders.new_po'   => 'New PO',
+    'purchaseorders.po_number' => 'PO #',
+    'purchaseorders.supplier' => 'Supplier',
+    'purchaseorders.no_purchase_orders' => 'No purchase orders yet.',
+
+    /* =========================
+     * Categories
+     * ========================= */
+    'categories.categories'   => 'Categories',
+    'categories.new_category' => '+ New Category',
+    'categories.slug'         => 'Slug',
+    'categories.parent'       => 'Parent',
+
+    /* =========================
+     * User Management
+     * ========================= */
+    'users.roles'             => 'Roles',
+    'users.new_role'          => 'New Role',
+    'users.slug'              => 'Slug',
+    'users.delete_role_confirm' => 'Delete this role?',
+    'users.no_roles'          => 'No roles found.',
+
+    /* =========================
+     * Purchase Invoices
+     * ========================= */
+    'purchaseinvoices.purchase_invoices' => 'Purchase Invoices',
+    'purchaseinvoices.back_to_purchase_orders' => 'Back to Purchase Orders',
+    'purchaseinvoices.pi_number' => 'PI #',
+    'purchaseinvoices.supplier' => 'Supplier',
+    'purchaseinvoices.po_number' => 'PO #',
+    'purchaseinvoices.no_purchase_invoices' => 'No purchase invoices yet.',
+
+    /* =========================
+     * Makes & Models
+     * ========================= */
+    'makes.makes'             => 'Makes',
+    'makes.new_make'          => '+ New Make',
+    'makes.slug'              => 'Slug',
+    'models.models'           => 'Models',
+    'models.filter_by_make'   => 'Filter by make',
+    'models.new_model'        => '+ New Model',
+
+    /* =========================
+     * Stock Transfers
+     * ========================= */
+    'transfers.stock_transfers' => 'Stock Transfers',
+    'transfers.new_transfer'  => 'New Transfer',
+    'transfers.tr_number'     => 'TR #',
+    'transfers.date'          => 'Date',
+    'transfers.from'          => 'From',
+    'transfers.to'            => 'To',
+    'transfers.open'          => 'Open',
+    'transfers.no_transfers'  => 'No transfers yet.',
+
+    /* =========================
+     * Goods Receipts
+     * ========================= */
+    'receipts.goods_receipts' => 'Goods Receipts (GRN)',
+    'receipts.most_recent_receipts' => 'Most recent receipts across all Purchase Invoices.',
+    'receipts.date'          => 'Date',
+    'receipts.pi_number'     => 'PI #',
+    'receipts.product'       => 'Product',
+    'receipts.warehouse'     => 'Warehouse',
+    'receipts.quantity'      => 'Qty',
+    'receipts.unit_cost'     => 'Unit Cost',
+
+    /* =========================
+     * Purchase Returns
+     * ========================= */
+    'purchasereturns.purchase_returns' => 'Purchase Returns (Debit Notes)',
+    'purchasereturns.most_recent_returns' => 'Most recent purchase returns across all PIs.',
+    'purchasereturns.date'   => 'Date',
+    'purchasereturns.pr_number' => 'PR #',
+    'purchasereturns.pi_number' => 'PI #',
+    'purchasereturns.supplier' => 'Supplier',
+
+    /* =========================
+     * Supplier Payments
+     * ========================= */
+    'supplierpayments.supplier_payments' => 'Supplier Payments',
+    'supplierpayments.back_to_purchase_invoices' => 'Back to Purchase Invoices',
+    'supplierpayments.date'  => 'Date',
+    'supplierpayments.supplier' => 'Supplier',
+    'supplierpayments.pi_number' => 'PI #',
+    'supplierpayments.method' => 'Method',
+    'supplierpayments.reference' => 'Ref',
+    'supplierpayments.amount' => 'Amount',
+    'supplierpayments.no_supplier_payments' => 'No supplier payments yet.',
+
+    /* =========================
+     * Stock Adjustments
+     * ========================= */
+    'adjustments.stock_adjustments' => 'Stock Adjustments',
+    'adjustments.new_adjustment' => 'New Adjustment',
+    'adjustments.ad_number'  => 'AD #',
+    'adjustments.date'       => 'Date',
+    'adjustments.warehouse'  => 'Warehouse',
+    'adjustments.reason'     => 'Reason',
+    'adjustments.open'       => 'Open',
+    'adjustments.no_adjustments' => 'No adjustments yet.',
+
+    /* =========================
+     * Reservations
+     * ========================= */
+    'reservations.reservations' => 'Reservations',
+    'reservations.description' => 'Shows documents currently holding stock reservations. Quotes reserve when status is Sent. Orders reserve after converting from quotes. Delivery confirmation on invoice releases order reservations.',
+    'reservations.all_customers' => 'All customers',
+    'reservations.all_types' => 'All types',
+
+    /* =========================
+     * Low Stock
+     * ========================= */
+    'lowstock.low_stock' => 'Low Stock',
+    'lowstock.threshold' => 'Threshold',
+    'lowstock.warehouse' => 'Warehouse',
+    'lowstock.product' => 'Product',
+    'lowstock.on_hand' => 'On Hand',
+    'lowstock.reserved' => 'Reserved',
+    'lowstock.available' => 'Available',
+
+    /* =========================
+     * Contacts
+     * ========================= */
+    'contacts.contacts' => 'Contacts',
+    'contacts.search_placeholder' => 'Search name/email/phone',
+    'contacts.all_customers' => 'All customers',
+    'contacts.new_contact' => '+ New Contact',
+    'contacts.title' => 'Title',
+    'contacts.client' => 'Client',
+
+    /* =========================
+     * Additional Reports
+     * ========================= */
+    'reports.purchasing_report' => 'Purchasing Report',
+    'reports.from' => 'From',
+    'reports.to' => 'To',
+    'reports.total_purchases' => 'Total Purchases',
+    'reports.total_purchase_returns' => 'Total Purchase Returns',
+    'reports.net_purchases' => 'Net Purchases',
+    'reports.supplier_payments' => 'Supplier Payments',
+    'reports.date' => 'Date',
+    'reports.type' => 'Type',
+    'reports.reference' => 'Ref',
+    'reports.supplier' => 'Supplier',
+    'reports.debit' => 'Debit',
+    'reports.credit' => 'Credit',
+    'reports.inventory_valuation' => 'Inventory Valuation (Weighted Avg)',
+    'reports.warehouse' => 'Warehouse',
+    'reports.product' => 'Product',
+    'reports.on_hand' => 'On hand',
+    'reports.avg_cost' => 'Avg cost',
+    'reports.value' => 'Value',
+    'reports.ap_aging' => 'AP Aging',
+    'reports.as_of' => 'As of',
+    'reports.0_30_days' => '0–30',
+    'reports.31_60_days' => '31–60',
+    'reports.61_90_days' => '61–90',
+    'reports.90_plus_days' => '90+',
+
     'common.all'               => 'All',
     'common.none'              => 'None',
     'common.loading'           => 'Loading...',

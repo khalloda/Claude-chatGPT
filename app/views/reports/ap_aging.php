@@ -1,24 +1,30 @@
 <?php
 use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $rows,$totals; @var string $asof */
 ?>
 <section>
-  <h2>AP Aging</h2>
+  <h2><?= $t('reports.ap_aging') ?></h2>
 
   <form class="no-print" method="get" action="<?= base_url('/reports/ap-aging') ?>" style="display:flex;gap:8px;align-items:end;margin:8px 0;">
-    <label><div>As of</div><input type="date" name="asof" value="<?= htmlspecialchars($asof,ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:6px;"></label>
-    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;">Apply</button>
-    <button type="button" onclick="window.print()" style="padding:8px 12px;border:1px solid #111;border-radius:8px;background:#fff;color:#111;cursor:pointer;">Print</button>
+    <label><div><?= $t('reports.as_of') ?></div><input type="date" name="asof" value="<?= htmlspecialchars($asof,ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:6px;"></label>
+    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;"><?= $t('common.apply') ?></button>
+    <button type="button" onclick="window.print()" style="padding:8px 12px;border:1px solid #111;border-radius:8px;background:#fff;color:#111;cursor:pointer;"><?= $t('common.print') ?></button>
   </form>
 
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
-      <th style="border-bottom:1px solid #eee;padding:8px;">Supplier</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">0–30</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">31–60</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">61–90</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">90+</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;">Total</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('reports.supplier') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.0_30_days') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.31_60_days') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.61_90_days') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('reports.90_plus_days') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;"><?= $t('common.total') ?></th>
     </tr></thead>
     <tbody>
       <?php foreach ($rows as $r): ?>

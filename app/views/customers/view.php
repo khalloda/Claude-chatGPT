@@ -1,31 +1,37 @@
 <?php
 use function App\Core\base_url;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $customer,$quotes,$orders,$invoices,$payments; @var float $ar_balance,$inv_total,$pay_total,$ret_total */
 ?>
 <section>
-  <h2>Customer — <?= htmlspecialchars($customer['name'] ?? '',ENT_QUOTES,'UTF-8') ?></h2>
+  <h2><?= $t('customers.customer') ?> — <?= $h($customer['name'] ?? '') ?></h2>
   <p>
-    <strong>Phone:</strong> <?= htmlspecialchars($customer['phone'] ?? '',ENT_QUOTES,'UTF-8') ?> ·
-    <strong>Email:</strong> <?= htmlspecialchars($customer['email'] ?? '',ENT_QUOTES,'UTF-8') ?> ·
-    <strong>Address:</strong> <?= htmlspecialchars($customer['address'] ?? '',ENT_QUOTES,'UTF-8') ?>
+    <strong><?= $t('common.phone') ?>:</strong> <?= $h($customer['phone'] ?? '') ?> ·
+    <strong><?= $t('common.email') ?>:</strong> <?= $h($customer['email'] ?? '') ?> ·
+    <strong><?= $t('common.address') ?>:</strong> <?= $h($customer['address'] ?? '') ?>
   </p>
   <p>
-    <strong>AR Totals</strong> — Invoices: <?= number_format($inv_total,2) ?> ·
-    Payments: <?= number_format($pay_total,2) ?> ·
-    Credits: <?= number_format($ret_total,2) ?> ·
-    <strong>Balance:</strong> <?= number_format($ar_balance,2) ?>
+    <strong><?= $t('customers.ar_totals') ?></strong> — <?= $t('customers.invoices') ?>: <?= number_format($inv_total,2) ?> ·
+    <?= $t('customers.payments') ?>: <?= number_format($pay_total,2) ?> ·
+    <?= $t('customers.credits') ?>: <?= number_format($ret_total,2) ?> ·
+    <strong><?= $t('customers.balance') ?>:</strong> <?= number_format($ar_balance,2) ?>
   </p>
   <p>
-    <a class="button" href="<?= base_url('/customers/statement?id='.(int)$customer['id']) ?>">View Statement</a>
-    · <a href="<?= base_url('/customers') ?>">Back to Customers</a>
+    <a class="button" href="<?= base_url('/customers/statement?id='.(int)$customer['id']) ?>"><?= $t('customers.view_statement') ?></a>
+    · <a href="<?= base_url('/customers') ?>"><?= $t('customers.back_to_customers') ?></a>
   </p>
 
   <div class="tabs">
     <div class="tabbar">
-      <button data-tab="quotes" class="active">Quotes</button>
-      <button data-tab="orders">Sales Orders</button>
-      <button data-tab="invoices">Invoices</button>
-      <button data-tab="payments">Payments</button>
+      <button data-tab="quotes" class="active"><?= $t('nav.quotes') ?></button>
+      <button data-tab="orders"><?= $t('customers.sales_orders') ?></button>
+      <button data-tab="invoices"><?= $t('nav.invoices') ?></button>
+      <button data-tab="payments"><?= $t('nav.payments') ?></button>
     </div>
 
     <div class="tabcontent" id="tab-quotes" style="display:block;">

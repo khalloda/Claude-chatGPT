@@ -2,32 +2,37 @@
 use function App\Core\base_url;
 use function App\Core\csrf_field;
 use function App\Core\flash_get;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <section>
-  <h2>Contacts</h2>
+  <h2><?= $t('contacts.contacts') ?></h2>
   <?php if ($m = flash_get('success')): ?><div style="background:#e7f8ee;border:1px solid #b9e7c9;padding:10px;border-radius:8px;margin:10px 0;"><?= htmlspecialchars($m,ENT_QUOTES,'UTF-8') ?></div><?php endif; ?>
   <?php if ($m = flash_get('error')): ?><div style="background:#ffe9e9;border:1px solid #ffb3b3;padding:10px;border-radius:8px;margin:10px 0;"><?= htmlspecialchars($m,ENT_QUOTES,'UTF-8') ?></div><?php endif; ?>
 
   <form method="get" action="<?= base_url('/contacts') ?>" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <input type="text" name="q" placeholder="Search name/email/phone" value="<?= htmlspecialchars((string)($q ?? ''),ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
+    <input type="text" name="q" placeholder="<?= $t('contacts.search_placeholder') ?>" value="<?= htmlspecialchars((string)($q ?? ''),ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
     <select name="customer_id" style="padding:8px;border:1px solid #ddd;border-radius:8px;">
-      <option value="">All customers</option>
+      <option value=""><?= $t('contacts.all_customers') ?></option>
       <?php foreach (($customers ?? []) as $c): ?>
         <option value="<?= (int)$c['id'] ?>" <?= ((int)($customer_id ?? 0) === (int)$c['id'])?'selected':'' ?>><?= htmlspecialchars($c['name'] ?? '',ENT_QUOTES,'UTF-8') ?></option>
       <?php endforeach; ?>
     </select>
-    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;">Filter</button>
-    <a href="<?= base_url('/contacts/create') ?>" style="align-self:center;margin-left:auto;">+ New Contact</a>
+    <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;"><?= $t('common.filter') ?></button>
+    <a href="<?= base_url('/contacts/create') ?>" style="align-self:center;margin-left:auto;"><?= $t('contacts.new_contact') ?></a>
   </form>
 
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Name</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Email</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Phone</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Title</th>
-      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Client</th>
-      <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.name') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.email') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('common.phone') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('contacts.title') ?></th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;"><?= $t('contacts.client') ?></th>
+      <th style="border-bottom:1px solid #eee;padding:8px;"><?= $t('common.actions') ?></th>
     </tr></thead>
     <tbody>
       <?php foreach (($items ?? []) as $ct): ?>

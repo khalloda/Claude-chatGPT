@@ -2,18 +2,24 @@
 use function App\Core\base_url; 
 use function App\Core\csrf_field;
 use function App\Core\user_has_permission;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $tax_rates, $tax_types */
 /** @var string $page_title */
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><?= htmlspecialchars($page_title ?? 'Tax Rate Management', ENT_QUOTES) ?></h2>
+  <h2><?= $h($page_title ?? $t('settings.tax_rate_management')) ?></h2>
   <div class="btn-group">
     <a class="btn btn-outline-secondary" href="<?= base_url('/settings/tax-currency') ?>">
-      <i class="fas fa-arrow-left"></i> Back to Settings
+      <i class="fas fa-arrow-left"></i> <?= $t('settings.back_to_settings') ?>
     </a>
     <?php if (user_has_permission('settings.manage')): ?>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaxRateModal">
-      <i class="fas fa-plus"></i> Add Tax Rate
+      <i class="fas fa-plus"></i> <?= $t('settings.add_tax_rate') ?>
     </button>
     <?php endif; ?>
   </div>

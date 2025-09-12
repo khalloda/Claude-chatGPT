@@ -1,20 +1,26 @@
 <?php 
 use function App\Core\base_url; 
 use function App\Core\csrf_field;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $company_settings, $currency_settings, $tax_settings, $tax_rates, $currencies, $base_currency */
 /** @var string $page_title */
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><?= htmlspecialchars($page_title ?? 'Taxes & Currency Settings', ENT_QUOTES) ?></h2>
+  <h2><?= $h($page_title ?? $t('settings.taxes_currency_settings')) ?></h2>
   <div class="btn-group">
     <a class="btn btn-outline-secondary" href="<?= base_url('/') ?>">
-      <i class="fas fa-arrow-left"></i> Back
+      <i class="fas fa-arrow-left"></i> <?= $t('common.back') ?>
     </a>
     <a class="btn btn-outline-primary" href="<?= base_url('/settings/tax-rates') ?>">
-      <i class="fas fa-percentage"></i> Manage Tax Rates
+      <i class="fas fa-percentage"></i> <?= $t('settings.manage_tax_rates') ?>
     </a>
     <a class="btn btn-outline-primary" href="<?= base_url('/settings/currencies') ?>">
-      <i class="fas fa-coins"></i> Manage Currencies
+      <i class="fas fa-coins"></i> <?= $t('settings.manage_currencies') ?>
     </a>
   </div>
 </div>
