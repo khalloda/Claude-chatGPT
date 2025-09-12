@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 10, 2025 at 07:55 PM
+-- Generation Time: Sep 12, 2025 at 07:06 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -104,6 +104,35 @@ CREATE TABLE IF NOT EXISTS `cogs_entries` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `contacts`
+--
+
+DROP TABLE IF EXISTS `contacts`;
+CREATE TABLE IF NOT EXISTS `contacts` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `customer_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(191) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `job_title` varchar(191) DEFAULT NULL,
+  `note` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_contacts_customer` (`customer_id`),
+  KEY `idx_contacts_name_email` (`name`,`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `contacts`
+--
+
+INSERT INTO `contacts` (`id`, `customer_id`, `name`, `email`, `phone`, `job_title`, `note`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Doaa Nassar', 'dnassar@sarieldin.com', '0235352424', 'Manager', 'Call before proceed', '2025-09-12 07:04:04', NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `customers`
 --
 
@@ -147,7 +176,7 @@ CREATE TABLE IF NOT EXISTS `doc_sequences` (
 
 INSERT INTO `doc_sequences` (`prefix`, `y`, `last_no`) VALUES
 ('po', 2025, 20),
-('q', 2025, 10);
+('q', 2025, 16);
 
 -- --------------------------------------------------------
 
@@ -210,7 +239,7 @@ CREATE TABLE IF NOT EXISTS `invoices` (
   UNIQUE KEY `inv_no` (`inv_no`),
   KEY `idx_invoices_order` (`sales_order_id`),
   KEY `idx_invoices_customer_date_status` (`customer_id`,`created_at`,`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `invoices`
@@ -218,7 +247,9 @@ CREATE TABLE IF NOT EXISTS `invoices` (
 
 INSERT INTO `invoices` (`id`, `inv_no`, `sales_order_id`, `customer_id`, `tax_rate`, `subtotal`, `tax_amount`, `total`, `paid_amount`, `status`, `created_at`, `updated_at`, `cogs_total`) VALUES
 (1, 'INV2025-0001', 1, 1, 10.00, 6000.00, 600.00, 6600.00, 6600.00, 'paid', '2025-08-30 09:35:44', '2025-08-30 10:00:51', 0.00),
-(2, 'INV2025-0006', 7, 1, 10.00, 650.00, 65.00, 715.00, 0.00, 'unpaid', '2025-09-02 11:37:20', '2025-09-02 12:26:59', 0.00);
+(2, 'INV2025-0006', 7, 1, 10.00, 650.00, 65.00, 715.00, 0.00, 'unpaid', '2025-09-02 11:37:20', '2025-09-02 12:26:59', 0.00),
+(3, 'INV2025-0012', 9, 1, 20.00, 450.00, 90.00, 540.00, 0.00, '', '2025-09-11 08:09:45', NULL, 0.00),
+(4, 'INV2025-0016', 10, 1, 0.00, 300.00, 0.00, 300.00, 0.00, '', '2025-09-11 10:44:42', NULL, 0.00);
 
 -- --------------------------------------------------------
 
@@ -237,7 +268,7 @@ CREATE TABLE IF NOT EXISTS `invoice_items` (
   `line_total` decimal(12,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_invoice_items_invoice` (`invoice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `invoice_items`
@@ -247,7 +278,9 @@ INSERT INTO `invoice_items` (`id`, `invoice_id`, `product_id`, `warehouse_id`, `
 (1, 1, 2, 1, 3, 650.00, 1950.00),
 (2, 1, 3, 1, 1, 1050.00, 1050.00),
 (3, 1, 1, 1, 2, 1500.00, 3000.00),
-(4, 2, 2, 1, 1, 650.00, 650.00);
+(4, 2, 2, 1, 1, 650.00, 650.00),
+(5, 3, 4, 1, 3, 150.00, 450.00),
+(6, 4, 4, 1, 2, 150.00, 300.00);
 
 -- --------------------------------------------------------
 
@@ -382,7 +415,7 @@ INSERT INTO `products` (`id`, `code`, `name`, `category_id`, `make_id`, `model_i
 (1, 'PRD0001', 'Spoiler', 1, 1, 1, 1000.00, 1500.00, '2025-08-29 15:28:48', NULL),
 (2, 'PRD0002', 'Coil', 3, 1, 1, 500.00, 650.00, '2025-08-29 15:56:03', NULL),
 (3, 'PRD0003', 'Red Polish', 2, 1, 1, 850.00, 1050.00, '2025-08-29 15:56:33', NULL),
-(4, 'PRD0004', 'Sparks Plug', 3, 2, 2, 0.00, 0.00, '2025-09-10 17:08:02', NULL);
+(4, 'PRD0004', 'Sparks Plug', 3, 2, 2, 100.00, 150.00, '2025-09-10 17:08:02', '2025-09-11 08:04:15');
 
 -- --------------------------------------------------------
 
@@ -396,6 +429,8 @@ CREATE TABLE IF NOT EXISTS `product_stocks` (
   `warehouse_id` int UNSIGNED NOT NULL,
   `qty_on_hand` int UNSIGNED NOT NULL DEFAULT '0',
   `qty_reserved` int UNSIGNED NOT NULL DEFAULT '0',
+  `qty_reserved_quote` int UNSIGNED NOT NULL DEFAULT '0',
+  `qty_reserved_order` int UNSIGNED NOT NULL DEFAULT '0',
   `avg_cost` decimal(12,4) NOT NULL DEFAULT '0.0000',
   PRIMARY KEY (`product_id`,`warehouse_id`),
   KEY `fk_ps_warehouse` (`warehouse_id`),
@@ -406,14 +441,14 @@ CREATE TABLE IF NOT EXISTS `product_stocks` (
 -- Dumping data for table `product_stocks`
 --
 
-INSERT INTO `product_stocks` (`product_id`, `warehouse_id`, `qty_on_hand`, `qty_reserved`, `avg_cost`) VALUES
-(1, 1, 9, 1, 0.0000),
-(1, 2, 1, 0, 1500.0000),
-(2, 1, 9, 1, 0.0000),
-(2, 2, 1, 0, 0.0000),
-(3, 1, 14, 1, 446.4286),
-(3, 2, 1, 0, 2000.0000),
-(4, 1, 8, 0, 100.0000);
+INSERT INTO `product_stocks` (`product_id`, `warehouse_id`, `qty_on_hand`, `qty_reserved`, `qty_reserved_quote`, `qty_reserved_order`, `avg_cost`) VALUES
+(1, 1, 9, 0, 0, 1, 0.0000),
+(1, 2, 1, 0, 0, 0, 1500.0000),
+(2, 1, 9, 0, 0, 1, 0.0000),
+(2, 2, 1, 0, 0, 0, 0.0000),
+(3, 1, 14, 0, 0, 1, 446.4286),
+(3, 2, 1, 0, 0, 0, 2000.0000),
+(4, 1, 6, 0, 0, 0, 100.0000);
 
 -- --------------------------------------------------------
 
@@ -601,7 +636,7 @@ CREATE TABLE IF NOT EXISTS `quotes` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `quote_no` (`quote_no`),
   KEY `idx_quotes_customer` (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `quotes`
@@ -618,7 +653,12 @@ INSERT INTO `quotes` (`id`, `quote_no`, `customer_id`, `status`, `tax_rate`, `su
 (11, 'Q2025-0007', 1, 'expired', 0.00, 1050.00, 0.00, 1050.00, NULL, '2025-09-02 10:09:39', '2025-09-02 10:23:09'),
 (12, 'Q2025-0008', 1, 'cancelled', 0.00, 1050.00, 0.00, 1050.00, NULL, '2025-09-02 10:10:43', '2025-09-02 10:16:42'),
 (13, 'Q2025-0009', 1, 'accepted', 0.00, 1050.00, 0.00, 1050.00, NULL, '2025-09-02 10:23:54', '2025-09-02 11:01:22'),
-(14, 'Q2025-0010', 1, 'draft', 10.00, 14700.00, 1470.00, 16170.00, NULL, '2025-09-10 19:41:38', NULL);
+(15, 'Q2025-0011', 1, 'accepted', 10.00, 650.00, 65.00, 715.00, '2025-09-17', '2025-09-11 07:50:48', '2025-09-11 08:00:09'),
+(16, 'Q2025-0012', 1, 'accepted', 20.00, 450.00, 90.00, 540.00, NULL, '2025-09-11 08:05:50', '2025-09-11 08:09:06'),
+(17, 'Q2025-0013', 1, 'cancelled', 10.00, 300.00, 30.00, 330.00, NULL, '2025-09-11 09:06:07', '2025-09-11 09:20:39'),
+(18, 'Q2025-0014', 1, 'cancelled', 0.00, 300.00, 0.00, 300.00, NULL, '2025-09-11 09:22:01', '2025-09-11 09:22:26'),
+(19, 'Q2025-0015', 1, 'cancelled', 0.00, 300.00, 0.00, 300.00, NULL, '2025-09-11 09:23:24', '2025-09-11 09:40:31'),
+(20, 'Q2025-0016', 1, 'accepted', 0.00, 300.00, 0.00, 300.00, NULL, '2025-09-11 09:43:16', '2025-09-11 09:43:54');
 
 -- --------------------------------------------------------
 
@@ -639,7 +679,7 @@ CREATE TABLE IF NOT EXISTS `quote_items` (
   KEY `idx_qi_quote` (`quote_id`),
   KEY `fk_qi_product` (`product_id`),
   KEY `fk_qi_wh` (`warehouse_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `quote_items`
@@ -662,8 +702,12 @@ INSERT INTO `quote_items` (`id`, `quote_id`, `product_id`, `warehouse_id`, `qty`
 (15, 11, 3, 1, 1, 1050.00, 1050.00),
 (16, 12, 3, 1, 1, 1050.00, 1050.00),
 (17, 13, 3, 1, 1, 1050.00, 1050.00),
-(18, 14, 1, 1, 2, 1500.00, 3000.00),
-(19, 14, 2, 2, 18, 650.00, 11700.00);
+(20, 15, 2, 1, 1, 650.00, 650.00),
+(21, 16, 4, 1, 3, 150.00, 450.00),
+(22, 17, 4, 1, 2, 150.00, 300.00),
+(23, 18, 4, 1, 2, 150.00, 300.00),
+(24, 19, 4, 1, 2, 150.00, 300.00),
+(25, 20, 4, 1, 2, 150.00, 300.00);
 
 -- --------------------------------------------------------
 
@@ -721,7 +765,7 @@ CREATE TABLE IF NOT EXISTS `sales_orders` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `so_no` (`so_no`),
   KEY `idx_so_quote` (`quote_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `sales_orders`
@@ -730,7 +774,10 @@ CREATE TABLE IF NOT EXISTS `sales_orders` (
 INSERT INTO `sales_orders` (`id`, `so_no`, `quote_id`, `customer_id`, `status`, `tax_rate`, `subtotal`, `tax_amount`, `total`, `created_at`, `updated_at`) VALUES
 (1, 'SO2025-0001', 1, 1, 'closed', 10.00, 6000.00, 600.00, 6600.00, '2025-08-29 17:26:28', '2025-09-02 12:28:50'),
 (6, 'SO2025-0009', 13, 1, '', 0.00, 1050.00, 0.00, 1050.00, '2025-09-02 11:01:22', NULL),
-(7, 'SO2025-0006', 10, 1, '', 10.00, 650.00, 65.00, 715.00, '2025-09-02 11:37:16', NULL);
+(7, 'SO2025-0006', 10, 1, '', 10.00, 650.00, 65.00, 715.00, '2025-09-02 11:37:16', NULL),
+(8, 'SO2025-0011', 15, 1, '', 10.00, 650.00, 65.00, 715.00, '2025-09-11 08:00:09', NULL),
+(9, 'SO2025-0012', 16, 1, '', 20.00, 450.00, 90.00, 540.00, '2025-09-11 08:09:06', NULL),
+(10, 'SO2025-0016', 20, 1, '', 0.00, 300.00, 0.00, 300.00, '2025-09-11 09:43:54', NULL);
 
 -- --------------------------------------------------------
 
@@ -749,7 +796,7 @@ CREATE TABLE IF NOT EXISTS `sales_order_items` (
   `line_total` decimal(12,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_soi_so` (`sales_order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `sales_order_items`
@@ -760,7 +807,10 @@ INSERT INTO `sales_order_items` (`id`, `sales_order_id`, `product_id`, `warehous
 (2, 1, 3, 1, 1, 1050.00, 1050.00),
 (3, 1, 1, 1, 2, 1500.00, 3000.00),
 (4, 6, 3, 1, 1, 1050.00, 1050.00),
-(5, 7, 2, 1, 1, 650.00, 650.00);
+(5, 7, 2, 1, 1, 650.00, 650.00),
+(6, 8, 2, 1, 1, 650.00, 650.00),
+(7, 9, 4, 1, 3, 150.00, 450.00),
+(8, 10, 4, 1, 2, 150.00, 300.00);
 
 -- --------------------------------------------------------
 
@@ -1148,6 +1198,12 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 ALTER TABLE `categories`
   ADD CONSTRAINT `fk_categories_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `contacts`
+--
+ALTER TABLE `contacts`
+  ADD CONSTRAINT `fk_contacts_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `invoice_items`

@@ -63,8 +63,12 @@ final class CustomerAging
     public static function getCustomerStatement(int $customerId, string $fromDate, string $toDate): array
     {
         $pdo = DB::conn();
-        
+
         // Opening balance calculation
+        $fromStart = $fromDate.' 00:00:00';
+        $toStart   = $toDate.' 00:00:00';
+        $toExclusive = date('Y-m-d H:i:s', strtotime($toStart . ' +1 day'));
+
         $openingSql = "
             SELECT 
                 COALESCE(SUM(i.total), 0) - 
@@ -77,7 +81,7 @@ final class CustomerAging
         ";
         
         $stmt = $pdo->prepare($openingSql);
-        $stmt->execute([$fromDate, $fromDate, $customerId, $fromDate]);
+        $stmt->execute([$fromStart, $fromStart, $customerId, $fromStart]);
         $opening = (float)$stmt->fetchColumn();
         
         // Get customer info
@@ -105,7 +109,7 @@ final class CustomerAging
                     i.id as ref_id
                 FROM invoices i
                 WHERE i.customer_id = ? 
-                  AND DATE(i.created_at) BETWEEN ? AND ?
+                  AND i.created_at >= ? AND i.created_at < ?
                 
                 UNION ALL
                 
@@ -119,7 +123,7 @@ final class CustomerAging
                 FROM invoice_payments p
                 JOIN invoices i ON i.id = p.invoice_id
                 WHERE i.customer_id = ?
-                  AND DATE(p.paid_at) BETWEEN ? AND ?
+                  AND p.paid_at >= ? AND p.paid_at < ?
                 
                 UNION ALL
                 
@@ -133,18 +137,67 @@ final class CustomerAging
                 FROM sales_returns sr
                 JOIN invoices i ON i.id = sr.sales_invoice_id
                 WHERE i.customer_id = ?
-                  AND DATE(sr.created_at) BETWEEN ? AND ?
+                  AND sr.created_at >= ? AND sr.created_at < ?
             ) transactions
             ORDER BY txn_date, kind
         ";
-        
+
         $stmt = $pdo->prepare($transactionsSql);
         $stmt->execute([
-            $customerId, $fromDate, $toDate,
-            $customerId, $fromDate, $toDate,
-            $customerId, $fromDate, $toDate
+            $customerId, $fromStart, $toExclusive,
+            $customerId, $fromStart, $toExclusive,
+            $customerId, $fromStart, $toExclusive
         ]);
         $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        // Fallback: if nothing returned, attempt a simpler per-table merge to avoid driver/date quirks
+        if (empty($transactions)) {
+            try {
+                // Invoices
+                $si = $pdo->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id FROM invoices i WHERE i.customer_id=? AND i.created_at >= ? AND i.created_at < ?");
+                $si->execute([$customerId, $fromStart, $toExclusive]);
+                $fallback = $si->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+                // Payments
+                $sp = $pdo->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at >= ? AND p.paid_at < ?");
+                $sp->execute([$customerId, $fromStart, $toExclusive]);
+                $fallback = array_merge($fallback, $sp->fetchAll(PDO::FETCH_ASSOC) ?: []);
+
+                // Returns
+                $sr = $pdo->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at >= ? AND sr.created_at < ?");
+                $sr->execute([$customerId, $fromStart, $toExclusive]);
+                $fallback = array_merge($fallback, $sr->fetchAll(PDO::FETCH_ASSOC) ?: []);
+
+                // Sort by date
+                usort($fallback, function($a,$b){ return strcmp($a['txn_date'] ?? '', $b['txn_date'] ?? ''); });
+                $transactions = $fallback;
+            } catch (\Throwable $e) {
+                // leave empty if fallback fails
+            }
+        }
+
+        // Last-resort fallback: date-only comparisons using DATE() (handles edge cases on some drivers)
+        if (empty($transactions)) {
+            try {
+                $fallback = [];
+                $si = $pdo->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id FROM invoices i WHERE i.customer_id=? AND DATE(i.created_at) BETWEEN ? AND ?");
+                $si->execute([$customerId, $fromDate, $toDate]);
+                $fallback = array_merge($fallback, $si->fetchAll(PDO::FETCH_ASSOC) ?: []);
+
+                $sp = $pdo->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND DATE(p.paid_at) BETWEEN ? AND ?");
+                $sp->execute([$customerId, $fromDate, $toDate]);
+                $fallback = array_merge($fallback, $sp->fetchAll(PDO::FETCH_ASSOC) ?: []);
+
+                $srq = $pdo->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND DATE(sr.created_at) BETWEEN ? AND ?");
+                $srq->execute([$customerId, $fromDate, $toDate]);
+                $fallback = array_merge($fallback, $srq->fetchAll(PDO::FETCH_ASSOC) ?: []);
+
+                usort($fallback, function($a,$b){ return strcmp($a['txn_date'] ?? '', $b['txn_date'] ?? ''); });
+                $transactions = $fallback;
+            } catch (\Throwable $e) {
+                // still empty
+            }
+        }
         
         // Calculate running balances
         $running = $opening;

@@ -203,6 +203,17 @@ final class InvoicesController extends Controller
         }
 
         $pdo = DB::conn();
+        // Prevent overpayment: amount must not exceed remaining balance
+        try {
+            $remSt = $pdo->prepare('SELECT total, COALESCE(paid_amount,0) AS paid FROM invoices WHERE id=? LIMIT 1');
+            $remSt->execute([$invoiceId]);
+            $rem = $remSt->fetch(PDO::FETCH_ASSOC) ?: ['total'=>0,'paid'=>0];
+            $remaining = max(0.0, (float)$rem['total'] - (float)$rem['paid']);
+            if ($amount - 0.00001 > $remaining) {
+                flash_set('error','Payment exceeds remaining balance (Remaining: '.number_format($remaining,2).').');
+                redirect('/invoices/show?id='.$invoiceId);
+            }
+        } catch (\Throwable $e) { /* ignore; fallback to DB constraint below */ }
         try {
             $pdo->prepare("INSERT INTO invoice_payments (invoice_id, amount, method, reference, paid_at, created_at)
                            VALUES (?,?,?,?,?, NOW())")

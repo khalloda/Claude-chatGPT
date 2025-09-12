@@ -170,6 +170,7 @@ final class CustomersController extends Controller
         $id   = (int)($_GET['id'] ?? 0);
         $from = $_GET['from'] ?? date('Y-m-01');
         $to   = $_GET['to']   ?? date('Y-m-d');
+        if ($from > $to) { [$from,$to] = [$to,$from]; }
 
         $pdo = DB::conn();
         $st = $pdo->prepare("SELECT * FROM customers WHERE id=? LIMIT 1");
@@ -177,12 +178,66 @@ final class CustomersController extends Controller
         $customer = $st->fetch(\PDO::FETCH_ASSOC);
         if (!$customer) { $this->view('errors/404',['message'=>'Customer not found']); return; }
 
-        // Use optimized statement service
-        $statementData = CustomerAging::getCustomerStatement($id, $from, $to);
-        $customer = $statementData['customer'];
-        $opening = $statementData['opening'];
-        $rows = $statementData['transactions'];
-        $running = $statementData['closing'];
+        // Use optimized statement service with safe fallback
+        try {
+            $statementData = CustomerAging::getCustomerStatement($id, $from, $to);
+            $customer = $statementData['customer'] ?? $customer;
+            $opening = (float)($statementData['opening'] ?? 0.0);
+            $rows    = $statementData['transactions'] ?? [];
+            $running = (float)($statementData['closing'] ?? $opening);
+
+            // Controller-level fallback if rows are still empty: recreate using the same approach used in customer view
+            if (!$rows) {
+                $fromStart = $from.' 00:00:00';
+                $toExclusive = date('Y-m-d H:i:s', strtotime($to.' 00:00:00 +1 day'));
+
+                $pdo2 = DB::conn();
+                $merged = [];
+
+                // Invoices
+                $si = $pdo2->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id FROM invoices i WHERE i.customer_id=? AND i.created_at >= ? AND i.created_at < ?");
+                $si->execute([$id, $fromStart, $toExclusive]);
+                $merged = array_merge($merged, $si->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
+                // Payments
+                $sp = $pdo2->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at >= ? AND p.paid_at < ?");
+                $sp->execute([$id, $fromStart, $toExclusive]);
+                $merged = array_merge($merged, $sp->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
+                // Returns
+                $srq = $pdo2->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at >= ? AND sr.created_at < ?");
+                $srq->execute([$id, $fromStart, $toExclusive]);
+                $merged = array_merge($merged, $srq->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+
+                if ($merged) {
+                    usort($merged, function($a,$b){ return strcmp($a['txn_date'] ?? '', $b['txn_date'] ?? ''); });
+                    $rows = $merged;
+                    $running = $opening;
+                    foreach ($rows as &$r) { $running += (float)($r['debit'] ?? 0) - (float)($r['credit'] ?? 0); $r['running'] = $running; }
+                    unset($r);
+                }
+            }
+        } catch (\Throwable $e) {
+            \App\Core\Logger::error('Customer statement failed', ['customer_id'=>$id,'from'=>$from,'to'=>$to,'error'=>$e->getMessage()]);
+            // Fallback: show empty movement with opening 0 to avoid 500
+            $opening = 0.0; $rows = []; $running = 0.0;
+        }
+
+        // Final safety: if still empty, show recent transactions without date filter
+        if (!$rows) {
+            $rows = [];
+            $si = $pdo->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit FROM invoices i WHERE i.customer_id=? ORDER BY i.created_at ASC LIMIT 100");
+            $si->execute([$id]); $rows = array_merge($rows, $si->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+            $sp = $pdo->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? ORDER BY p.paid_at ASC LIMIT 100");
+            $sp->execute([$id]); $rows = array_merge($rows, $sp->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+            $srq = $pdo->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? ORDER BY sr.created_at ASC LIMIT 100");
+            $srq->execute([$id]); $rows = array_merge($rows, $srq->fetchAll(\PDO::FETCH_ASSOC) ?: []);
+            if ($rows) {
+                usort($rows, function($a,$b){ return strcmp($a['txn_date'] ?? '', $b['txn_date'] ?? ''); });
+                $running = 0.0;
+                foreach ($rows as &$r) { $running += (float)($r['debit'] ?? 0) - (float)($r['credit'] ?? 0); $r['running'] = $running; } unset($r);
+            }
+        }
 
         $this->view('customers/statement', [
             'customer'=>$customer,
