@@ -307,6 +307,14 @@ $router->get('/reports/purchasing', 'reportscontroller@purchasing');
 
 // settings
 $router->get('/settings/tax-currency', 'settingscontroller@taxcurrency');
+$router->post('/settings/tax-currency/update', 'settingscontroller@updateTaxCurrency');
+$router->get('/settings/tax-rates', 'settingscontroller@manageTaxRates');
+$router->post('/settings/tax-rates/create', 'settingscontroller@createTaxRate');
+$router->post('/settings/tax-rates/update', 'settingscontroller@updateTaxRate');
+$router->post('/settings/tax-rates/delete', 'settingscontroller@deleteTaxRate');
+$router->get('/settings/currencies', 'settingscontroller@manageCurrencies');
+$router->post('/settings/currencies/create', 'settingscontroller@createCurrency');
+$router->post('/settings/currencies/update', 'settingscontroller@updateCurrency');
 $router->get('/settings/units-sequences', 'settingscontroller@unitssequences');
 
 // translations & notifications & integrations

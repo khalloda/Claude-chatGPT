@@ -225,3 +225,58 @@ function time_ago(string $datetime, bool $full = false): string {
         return 'unknown';
     }
 }
+
+/** Settings and business logic helpers */
+function get_default_tax_rate(): float {
+    try {
+        $defaultRate = \App\Models\TaxRate::getDefault('sales');
+        if ($defaultRate) {
+            return (float)$defaultRate['rate'];
+        }
+        
+        // Fallback to system setting
+        return (float)\App\Models\SystemSetting::get('default_tax_rate', 14.0);
+    } catch (\Throwable $e) {
+        return 14.0; // Egypt standard VAT
+    }
+}
+
+function format_currency(float $amount, string $currencyCode = null): string {
+    try {
+        return \App\Models\Currency::format($amount, $currencyCode);
+    } catch (\Throwable $e) {
+        return number_format($amount, 2) . ' EGP';
+    }
+}
+
+function calculate_tax(float $amount, float $rate = null, bool $inclusive = false): array {
+    try {
+        if ($rate === null) {
+            $rate = get_default_tax_rate();
+        }
+        
+        return \App\Models\TaxRate::calculateTax($amount, $rate, $inclusive);
+    } catch (\Throwable $e) {
+        $taxAmount = $inclusive ? 0 : ($amount * 0.14); // 14% default
+        return [
+            'net_amount' => $inclusive ? $amount : $amount,
+            'tax_amount' => $taxAmount,
+            'gross_amount' => $amount + $taxAmount,
+            'tax_rate' => $rate ?? 14.0
+        ];
+    }
+}
+
+function get_company_info(): array {
+    try {
+        return \App\Models\SystemSetting::getCompanyInfo();
+    } catch (\Throwable $e) {
+        return [
+            'company_name' => ['value' => 'Spare Parts Management System'],
+            'company_address' => ['value' => ''],
+            'company_phone' => ['value' => ''],
+            'company_email' => ['value' => ''],
+            'company_website' => ['value' => '']
+        ];
+    }
+}
