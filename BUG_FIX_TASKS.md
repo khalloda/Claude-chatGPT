@@ -8,7 +8,9 @@ This document tracks issues, analysis, and fixes discovered during testing. The 
 - [ISSUE-0001: Quote allows quantity exceeding stock](#issue-0001-quote-allows-quantity-exceeding-stock)
 - [ISSUE-0002: Sales Order lacks stock validation (Suspicion)](#issue-0002-sales-order-lacks-stock-validation-suspicion)
 - [ISSUE-0003: Available column shows 0 in Quote form](#issue-0003-available-column-shows-0-in-quote-form)
- - [ISSUE-0007: Customer Statement — empty payment ref, no links, date filter ignored](#issue-0007-customer-statement-—-empty-payment-ref-no-links-date-filter-ignored)
+- [ISSUE-0007: Customer Statement — empty payment ref, no links, date filter ignored](#issue-0007-customer-statement-—-empty-payment-ref-no-links-date-filter-ignored)
+- [ISSUE-0008: Supplier Statement — empty payment ref, no links, date filter parity](#issue-0008-supplier-statement-—-empty-payment-ref-no-links-date-filter-parity)
+ - [ISSUE-0009: Reports routes 404 — sales and purchasing](#issue-0009-reports-routes-404-—-sales-and-purchasing)
 
 ## Pending Issues
 
@@ -154,7 +156,7 @@ Related Issues: TODO
 - Description: On the Customer Statement page, the Payment Ref column renders blank for payments with no manual reference, the Ref values are not clickable, and transactions outside the selected date range are shown. Screenshot evidence shows rows from 2025-08-29 and 2025-08-30 when filtering 2025-09-01 to 2025-09-12, with empty Payment Ref.
 - Suspected Location: `app/controllers/customerscontroller.php:statement()` — the "Final safety" fallback builds an unbounded list without date filters and omits `ref_id`/`invoice_id` and payment ref fallback; upstream exceptions from `App\Services\CustomerAging::getCustomerStatement()` may trigger this path.
 - Severity: Major
-- Status: Needs Verification
+- Status: Closed
 - Root Cause Analysis:
   - The controller’s final fallback intentionally ignored date filters and selected recent transactions for the customer. It also selected payment `ref_no` as `p.reference` directly (which can be empty) and did not include `ref_id`/`invoice_id`, preventing links in the view.
   - When the optimized service throws or returns no rows (e.g., environment/date driver quirks), the controller enters this fallback, yielding the observed behavior: out-of-range rows, blank payment refs, and non-clickable refs.
@@ -175,4 +177,60 @@ Related Issues: TODO
   - Integration: Ensure a payment without `reference` renders `PMT{ID}` in Ref.
   - UI/E2E: Verify Invoice, Payment (links to its invoice), and Return refs are clickable; verify no August rows appear for a September-only filter.
   - Regression: Simulate a thrown exception in `CustomerAging::getCustomerStatement` and assert the controller fallback still respects date range and linkability.
+
+### ISSUE-0008: Supplier Statement — empty payment ref, no links, date filter parity
+
+- Issue ID & Title: ISSUE-0008 — Supplier Statement: add linkable refs, non-empty payment refs, and ensure date-respecting behavior consistent with customer statement
+- Description: Supplier statement mirrored the earlier customer statement issues: payment ref blank when user reference is missing, Ref column not clickable, and potential inconsistencies across sources. Needs parity with the fixed customer statement.
+- Suspected Location: `app/models/supplier.php::apMovements()` and `app/views/suppliers/statement.php`.
+- Severity: Major
+- Status: Needs Verification
+- Root Cause Analysis:
+  - `apMovements()` returned `ref_no` directly from `reference` for supplier payments, which can be empty, and did not include `invoice_id`, preventing link context in the view.
+  - The supplier statement view rendered plain text for Ref with no conditional anchors.
+- Implemented Fix:
+  - Model: Normalized `apMovements()` to return consistent columns (`txn_date, kind, ref_no, debit, credit, ref_id, invoice_id`).
+    - Invoices: `COALESCE(pi_no, CAST(id AS CHAR))` and include `invoice_id = id`.
+    - Payments: `COALESCE(NULLIF(reference,''), CONCAT('SP', LPAD(id,6,'0')))` and include `purchase_invoice_id AS invoice_id`.
+    - Returns: include `purchase_invoice_id AS invoice_id`.
+  - View: `app/views/suppliers/statement.php` now links:
+    - Invoice refs to `/purchaseinvoices/show?id={ref_id}`.
+    - Payment refs to `/purchaseinvoices/show?id={invoice_id}`.
+    - Return refs to `/purchasereturns/print?id={ref_id}` (no show route available).
+- Update 2025-09-12:
+  - User reported error page when visiting `/suppliers/statement?id=1&from=2025-09-01&to=2025-09-12`.
+  - Root cause: Accidental backslashes introduced at the start/end of SQL lines in `Supplier::apMovements()` caused a MySQL syntax error.
+  - Patch applied: cleaned multi-line SQL strings (removed stray `\` characters) in `app/models/supplier.php`. Re-test pending.
+- Database/Migration Impact: None. Read-only queries against existing tables (`purchase_invoices`, `supplier_payments`, `purchase_returns`). Baseline `chatgpt2_mi.sql` unchanged.
+- Related Tests:
+  - Integration: GET `/suppliers/statement?id={id}&from=YYYY-MM-DD&to=YYYY-MM-DD` returns rows with `txn_date` within the range.
+  - Integration: A supplier payment with empty `reference` renders `SP{ID}`.
+  - UI/E2E: Clicking Invoice, Payment, and Return refs navigates appropriately.
+  - Regression: Ensure statement still computes running balance correctly with mixed transaction types.
+
+### ISSUE-0009: Reports routes 404 — sales and purchasing
+
+- Issue ID & Title: ISSUE-0009 — Reports endpoints return 404: `/reports/sales`, `/reports/purchasing`
+- Description: Navigating to the Sales and Purchasing report URLs results in the 404 page. User provided failing URLs.
+- Suspected Location: `public/index.php` (routes missing), `app/controllers/reportscontroller.php` (no corresponding actions), and absent view templates.
+- Severity: Minor (navigation-level), elevates to Major if business requires these reports.
+- Status: Closed
+- Root Cause Analysis:
+  - Router only registered `ap-aging`, `ar-aging`, and `inventory-valuation` report routes. There were no `sales` or `purchasing` routes or actions, hence 404.
+- Implemented Fix:
+  - Router: Added routes `GET /reports/sales` and `GET /reports/purchasing` in `public/index.php`.
+  - Controller: Implemented `ReportsController::sales()` and `::purchasing()` that:
+    - Accept `from`/`to` dates, apply `[from 00:00:00, to +1 day)` filtering.
+    - Build a normalized, unioned transaction list with party names and linkable refs:
+      - Sales: invoices, invoice payments, sales returns.
+      - Purchasing: purchase invoices, supplier payments, purchase returns.
+    - Compute simple totals (invoices, returns, payments) and net values.
+  - Views: Added `app/views/reports/sales.php` and `app/views/reports/purchasing.php` with filters, totals, and linkable refs.
+  - Resilience: Wrapped union queries in try/catch with logged errors and a DATE()-based fallback per table to avoid 500s if SQL compatibility issues arise. See `reportscontroller@sales()` and `@purchasing()`.
+  - 2025-09-12: User confirmed both reports now load — marking Closed.
+- Database/Migration Impact: None. Read-only queries against baseline tables. `chatgpt2_mi.sql` unchanged.
+- Related Tests:
+  - Integration: Open `/reports/sales?from=YYYY-MM-01&to=YYYY-MM-DD` and `/reports/purchasing?...`; assert 200 OK and presence of totals.
+  - UI/E2E: Click refs to verify navigation: sales → invoices/show, payments → invoices/show, returns → salesreturns/show; purchasing → purchaseinvoices/show or purchasereturns/print.
+  - Data check: Totals equal sums of listed rows (debit, credit) per kind; net = invoices - returns.
 

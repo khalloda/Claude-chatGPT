@@ -292,6 +292,9 @@ $router->get('/purchasereturns/print', 'purchasereturnscontroller@printnote');
 $router->get('/reports/ap-aging', 'reportscontroller@apaging');
 $router->get('/reports/ar-aging', 'reportscontroller@araging');
 $router->get('/reports/inventory-valuation', 'reportscontroller@inventoryvaluation');
+// summary reports
+$router->get('/reports/sales', 'reportscontroller@sales');
+$router->get('/reports/purchasing', 'reportscontroller@purchasing');
 
 // stock transfers
 $router->get('/transfers', 'transferscontroller@index');

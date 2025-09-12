@@ -65,14 +65,16 @@ final class Supplier
         return $inv - $pay - $ret;
     }
 
-    /** Movements between dates inclusive. Debit increases AP, Credit decreases. */
+    /** Movements between dates inclusive. Debit increases AP, Credit decreases.
+     *  Returns normalized columns: txn_date, kind, ref_no, debit, credit, ref_id, invoice_id
+     */
     public static function apMovements(int $supplierId, string $from, string $to): array {
         $pdo = DB::conn();
 
         // Invoices (debit)
         $q1 = $pdo->prepare("
-            SELECT created_at AS txn_date, 'invoice' AS kind, pi_no AS ref_no,
-                   total AS debit, 0 AS credit, id AS ref_id
+            SELECT created_at AS txn_date, 'invoice' AS kind, COALESCE(pi_no, CAST(id AS CHAR)) AS ref_no,
+                   total AS debit, 0 AS credit, id AS ref_id, id AS invoice_id
             FROM purchase_invoices
             WHERE supplier_id=? AND DATE(created_at) BETWEEN ? AND ?
         ");
@@ -81,8 +83,9 @@ final class Supplier
 
         // Payments (credit)
         $q2 = $pdo->prepare("
-            SELECT paid_at AS txn_date, 'payment' AS kind, reference AS ref_no,
-                   0 AS debit, amount AS credit, id AS ref_id
+            SELECT paid_at AS txn_date, 'payment' AS kind,
+                   COALESCE(NULLIF(reference,''), CONCAT('SP', LPAD(id,6,'0'))) AS ref_no,
+                   0 AS debit, amount AS credit, id AS ref_id, purchase_invoice_id AS invoice_id
             FROM supplier_payments
             WHERE supplier_id=? AND DATE(paid_at) BETWEEN ? AND ?
         ");
@@ -92,7 +95,7 @@ final class Supplier
         // Purchase returns / debit notes (credit)
         $q3 = $pdo->prepare("
             SELECT created_at AS txn_date, 'return' AS kind, pr_no AS ref_no,
-                   0 AS debit, total AS credit, id AS ref_id
+                   0 AS debit, total AS credit, id AS ref_id, purchase_invoice_id AS invoice_id
             FROM purchase_returns
             WHERE supplier_id=? AND DATE(created_at) BETWEEN ? AND ?
         ");
@@ -102,8 +105,8 @@ final class Supplier
         $all = array_merge($invoices, $payments, $returns);
 
         usort($all, function($a,$b){
-            if ($a['txn_date'] === $b['txn_date']) return $a['kind'] <=> $b['kind'];
-            return strcmp($a['txn_date'], $b['txn_date']);
+            if (($a['txn_date'] ?? '') === ($b['txn_date'] ?? '')) return ($a['kind'] ?? '') <=> ($b['kind'] ?? '');
+            return strcmp(($a['txn_date'] ?? ''), ($b['txn_date'] ?? ''));
         });
 
         return $all;
