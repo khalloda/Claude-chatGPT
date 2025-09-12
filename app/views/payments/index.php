@@ -7,6 +7,7 @@
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
       <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Date</th>
+      <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Payment #</th>
       <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Invoice</th>
       <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Customer</th>
       <th style="text-align:left;border-bottom:1px solid #eee;padding:8px;">Method</th>
@@ -18,6 +19,9 @@
       <?php foreach ($rows as $r): ?>
         <tr>
           <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars($r['paid_at'], ENT_QUOTES, 'UTF-8') ?></td>
+          <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+            <?php $pnum = 'PMT'.str_pad((string)((int)$r['id']), 6, '0', STR_PAD_LEFT); echo htmlspecialchars($pnum, ENT_QUOTES, 'UTF-8'); ?>
+          </td>
           <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
             <a href="<?= base_url('/invoices/show?id='.(int)$r['invoice_id']) ?>">
               <?= htmlspecialchars($r['inv_no'], ENT_QUOTES, 'UTF-8') ?>

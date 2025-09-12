@@ -98,7 +98,8 @@ final class CustomerAging
                 ref_no,
                 debit,
                 credit,
-                ref_id
+                ref_id,
+                invoice_id
             FROM (
                 SELECT 
                     i.created_at as txn_date,
@@ -106,7 +107,8 @@ final class CustomerAging
                     COALESCE(i.inv_no, CAST(i.id AS CHAR)) as ref_no,
                     i.total as debit,
                     0 as credit,
-                    i.id as ref_id
+                    i.id as ref_id,
+                    i.id as invoice_id
                 FROM invoices i
                 WHERE i.customer_id = ? 
                   AND i.created_at >= ? AND i.created_at < ?
@@ -116,10 +118,11 @@ final class CustomerAging
                 SELECT 
                     p.paid_at as txn_date,
                     'payment' as kind,
-                    p.reference as ref_no,
+                    COALESCE(NULLIF(p.reference,''), CONCAT('PMT', LPAD(p.id,6,'0'))) as ref_no,
                     0 as debit,
                     p.amount as credit,
-                    p.id as ref_id
+                    p.id as ref_id,
+                    p.invoice_id as invoice_id
                 FROM invoice_payments p
                 JOIN invoices i ON i.id = p.invoice_id
                 WHERE i.customer_id = ?
@@ -133,7 +136,8 @@ final class CustomerAging
                     sr.sr_no as ref_no,
                     0 as debit,
                     sr.total as credit,
-                    sr.id as ref_id
+                    sr.id as ref_id,
+                    i.id as invoice_id
                 FROM sales_returns sr
                 JOIN invoices i ON i.id = sr.sales_invoice_id
                 WHERE i.customer_id = ?

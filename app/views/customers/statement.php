@@ -11,6 +11,7 @@ use function App\Core\base_url;
     <label><div>To</div><input type="date" name="to" value="<?= htmlspecialchars($to,ENT_QUOTES,'UTF-8') ?>" style="padding:8px;border:1px solid #ddd;border-radius:6px;"></label>
     <button type="submit" style="padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;">Apply</button>
     <button type="button" onclick="window.print()" style="padding:8px 12px;border:1px solid #111;border-radius:8px;background:#fff;color:#111;cursor:pointer;">Print</button>
+    <a href="<?= base_url('/customers/statement.csv?id='.(int)$customer['id'].'&from='.urlencode($from).'&to='.urlencode($to)) ?>" style="padding:8px 12px;border:1px solid #0a0;border-radius:8px;background:#fff;color:#0a0;">CSV</a>
     <a href="<?= base_url('/customers/show?id='.(int)$customer['id']) ?>" style="margin-left:8px;">Back</a>
   </form>
 
@@ -30,7 +31,21 @@ use function App\Core\base_url;
       <tr>
         <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars($r['txn_date'],ENT_QUOTES,'UTF-8') ?></td>
         <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars(ucfirst($r['kind']),ENT_QUOTES,'UTF-8') ?></td>
-        <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars($r['ref_no'] ?? '',ENT_QUOTES,'UTF-8') ?></td>
+        <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+          <?php
+            $kind = $r['kind'] ?? '';
+            $ref  = htmlspecialchars($r['ref_no'] ?? '',ENT_QUOTES,'UTF-8');
+            $rid  = (int)($r['ref_id'] ?? 0);
+            $inv  = (int)($r['invoice_id'] ?? 0);
+            if ($kind === 'invoice' && $rid) {
+              echo '<a href="'.base_url('/invoices/show?id='.$rid).'">'.$ref.'</a>';
+            } elseif ($kind === 'payment' && $inv) {
+              echo '<a href="'.base_url('/invoices/show?id='.$inv).'">'.$ref.'</a>';
+            } elseif ($kind === 'return' && $rid) {
+              echo '<a href="'.base_url('/salesreturns/show?id='.$rid).'">'.$ref.'</a>';
+            } else { echo $ref; }
+          ?>
+        </td>
         <td style="padding:8px;border-bottom:1px solid #f2f2f4;text-align:right;"><?= number_format((float)$r['debit'],2) ?></td>
         <td style="padding:8px;border-bottom:1px solid #f2f2f4;text-align:right;"><?= number_format((float)$r['credit'],2) ?></td>
         <td style="padding:8px;border-bottom:1px solid #f2f2f4;text-align:right;"><?= number_format((float)$r['running'],2) ?></td>

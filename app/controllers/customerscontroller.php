@@ -195,17 +195,17 @@ final class CustomersController extends Controller
                 $merged = [];
 
                 // Invoices
-                $si = $pdo2->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id FROM invoices i WHERE i.customer_id=? AND i.created_at >= ? AND i.created_at < ?");
+                $si = $pdo2->prepare("SELECT i.created_at AS txn_date, 'invoice' AS kind, COALESCE(i.inv_no, CAST(i.id AS CHAR)) AS ref_no, i.total AS debit, 0 AS credit, i.id AS ref_id, i.id AS invoice_id FROM invoices i WHERE i.customer_id=? AND i.created_at >= ? AND i.created_at < ?");
                 $si->execute([$id, $fromStart, $toExclusive]);
                 $merged = array_merge($merged, $si->fetchAll(\PDO::FETCH_ASSOC) ?: []);
 
                 // Payments
-                $sp = $pdo2->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, p.reference AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at >= ? AND p.paid_at < ?");
+                $sp = $pdo2->prepare("SELECT p.paid_at AS txn_date, 'payment' AS kind, COALESCE(NULLIF(p.reference,''), CONCAT('PMT', LPAD(p.id,6,'0'))) AS ref_no, 0 AS debit, p.amount AS credit, p.id AS ref_id, p.invoice_id AS invoice_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at >= ? AND p.paid_at < ?");
                 $sp->execute([$id, $fromStart, $toExclusive]);
                 $merged = array_merge($merged, $sp->fetchAll(\PDO::FETCH_ASSOC) ?: []);
 
                 // Returns
-                $srq = $pdo2->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at >= ? AND sr.created_at < ?");
+                $srq = $pdo2->prepare("SELECT sr.created_at AS txn_date, 'return' AS kind, sr.sr_no AS ref_no, 0 AS debit, sr.total AS credit, sr.id AS ref_id, i.id AS invoice_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at >= ? AND sr.created_at < ?");
                 $srq->execute([$id, $fromStart, $toExclusive]);
                 $merged = array_merge($merged, $srq->fetchAll(\PDO::FETCH_ASSOC) ?: []);
 

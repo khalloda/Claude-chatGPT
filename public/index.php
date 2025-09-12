@@ -148,6 +148,35 @@ $router->post('/customers/update', 'customerscontroller@update');
 $router->post('/customers/delete', 'customerscontroller@destroy');
 $router->get('/customers/show', 'customerscontroller@show'); 
 $router->get('/customers/statement', 'customerscontroller@statement');
+$router->get('/customers/statement.csv', function () {
+    \App\Core\require_auth();
+    $id   = (int)($_GET['id'] ?? 0);
+    $from = $_GET['from'] ?? date('Y-m-01');
+    $to   = $_GET['to']   ?? date('Y-m-d');
+    if ($from > $to) { $tmp=$from; $from=$to; $to=$tmp; }
+
+    // Use the same builder as controller fallback for reliability
+    $pdo = \App\Core\DB::conn();
+    $fromStart = $from.' 00:00:00';
+    $toExclusive = date('Y-m-d H:i:s', strtotime($to.' 00:00:00 +1 day'));
+    $rows = [];
+    $si=$pdo->prepare("SELECT i.created_at AS txn_date,'invoice' AS kind,COALESCE(i.inv_no,CAST(i.id AS CHAR)) AS ref_no,i.total AS debit,0 AS credit,i.id AS ref_id,i.id AS invoice_id FROM invoices i WHERE i.customer_id=? AND i.created_at>=? AND i.created_at<?");
+    $si->execute([$id,$fromStart,$toExclusive]); $rows=array_merge($rows,$si->fetchAll(PDO::FETCH_ASSOC)?:[]);
+    $sp=$pdo->prepare("SELECT p.paid_at AS txn_date,'payment' AS kind,COALESCE(NULLIF(p.reference,''), CONCAT('PMT', LPAD(p.id,6,'0'))) AS ref_no,0 AS debit,p.amount AS credit,p.id AS ref_id,p.invoice_id AS invoice_id FROM invoice_payments p JOIN invoices i ON i.id=p.invoice_id WHERE i.customer_id=? AND p.paid_at>=? AND p.paid_at<?");
+    $sp->execute([$id,$fromStart,$toExclusive]); $rows=array_merge($rows,$sp->fetchAll(PDO::FETCH_ASSOC)?:[]);
+    $sr=$pdo->prepare("SELECT sr.created_at AS txn_date,'return' AS kind,sr.sr_no AS ref_no,0 AS debit,sr.total AS credit,sr.id AS ref_id,i.id AS invoice_id FROM sales_returns sr JOIN invoices i ON i.id=sr.sales_invoice_id WHERE i.customer_id=? AND sr.created_at>=? AND sr.created_at<?");
+    $sr->execute([$id,$fromStart,$toExclusive]); $rows=array_merge($rows,$sr->fetchAll(PDO::FETCH_ASSOC)?:[]);
+    if ($rows) { usort($rows,function($a,$b){ return strcmp(($a['txn_date']??''),($b['txn_date']??'')); }); }
+
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="customer_statement_'.$id.'_'.$from.'_to_'.$to.'.csv"');
+    $out = fopen('php://output','w');
+    fputcsv($out, ['Date','Type','Ref','Debit','Credit']);
+    foreach ($rows as $r) {
+        fputcsv($out, [ $r['txn_date'] ?? '', ucfirst($r['kind'] ?? ''), $r['ref_no'] ?? '', number_format((float)($r['debit'] ?? 0),2,'.',''), number_format((float)($r['credit'] ?? 0),2,'.','') ]);
+    }
+    fclose($out);
+});
 
 // contacts (CRM)
 $router->get('/contacts', 'contactscontroller@index');
