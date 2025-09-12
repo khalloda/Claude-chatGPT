@@ -7,6 +7,9 @@
 use function App\Core\auth_user;
 use function App\Core\base_url;
 
+// Ensure helpers are loaded
+require_once __DIR__ . '/../../core/helpers.php';
+
 /* --- Safe helpers --- */
 // str_starts_with polyfill for PHP < 8 (harmless on PHP 8+)
 if (!function_exists('str_starts_with')) {
@@ -14,18 +17,24 @@ if (!function_exists('str_starts_with')) {
     return $needle === '' || strpos($haystack, $needle) === 0;
   }
 }
-// Safe translator: 1 or 2 args OK
-$T = function(string $key, string $fallback = null) {
-  if (function_exists('t')) {
-    $val = t($key);
-    if ($val !== null && $val !== '') return $val;
-  }
-  return $fallback ?? $key;
-};
-
 $current_user   = function_exists('auth_user') ? auth_user() : ($_SESSION['user'] ?? null);
 $current_locale = $_SESSION['locale'] ?? ($_GET['lang'] ?? 'en'); // fallback
 $is_rtl         = ($current_locale === 'ar');
+
+// Safe translator: 1 or 2 args OK
+$T = function(string $key, ?string $fallback = null) {
+  // Get current locale from multiple sources
+  $locale = $_SESSION['locale'] ?? ($_GET['lang'] ?? 'en');
+  
+  // Force set locale if needed
+  \App\Core\set_locale($locale);
+  
+  $val = \App\Core\t($key);
+  if ($val !== null && $val !== '' && $val !== $key) {
+    return $val;
+  }
+  return $fallback ?? $key;
+};
 
 /** Get the current request path (no query/hash) */
 $req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
@@ -67,11 +76,11 @@ $menu = [
         'label' => $T('nav.sales','Sales'),
         'match' => ['/quotes','/orders','/invoices','/salesreturns','/payments'],
         'items' => [
-            ['icon'=>'ti ti-file-invoice','label'=>'Quotes',        'href'=>$u('/quotes'),        'match'=>'/quotes'],
-            ['icon'=>'ti ti-shopping-cart','label'=>'Sales Orders', 'href'=>$u('/orders'),  'match'=>'/orders'],
-            ['icon'=>'ti ti-receipt-2',    'label'=>'Invoices',     'href'=>$u('/invoices'),     'match'=>'/invoices'],
-            ['icon'=>'ti ti-rotate-rectangle','label'=>'Sales Returns','href'=>$u('/salesreturns'),'match'=>'/salesreturns'],
-            ['icon'=>'ti ti-wallet','label'=>'Payments In (AR)',    'href'=>$u('/payments'),   'match'=>'/payments'],
+            ['icon'=>'ti ti-file-invoice','label'=>$T('nav.quotes','Quotes'),        'href'=>$u('/quotes'),        'match'=>'/quotes'],
+            ['icon'=>'ti ti-shopping-cart','label'=>$T('nav.orders','Sales Orders'), 'href'=>$u('/orders'),  'match'=>'/orders'],
+            ['icon'=>'ti ti-receipt-2',    'label'=>$T('nav.invoices','Invoices'),     'href'=>$u('/invoices'),     'match'=>'/invoices'],
+            ['icon'=>'ti ti-rotate-rectangle','label'=>$T('nav.sales_returns','Sales Returns'),'href'=>$u('/salesreturns'),'match'=>'/salesreturns'],
+            ['icon'=>'ti ti-wallet','label'=>$T('nav.payments','Payments In (AR)'),    'href'=>$u('/payments'),   'match'=>'/payments'],
         ],
     ],
 
@@ -82,12 +91,12 @@ $menu = [
         'label' => $T('nav.purchasing','Purchasing'),
         'match' => ['/suppliers','/purchaseorders','/purchaseinvoices','/goodsreceipts','/purchasereturns', '/supplierpayments'],
         'items' => [
-            ['icon'=>'ti ti-users','label'=>'Suppliers',            'href'=>$u('/suppliers'),         'match'=>'/suppliers'],
-            ['icon'=>'ti ti-file-description','label'=>'Purchase Orders','href'=>$u('/purchaseorders'),'match'=>'/purchaseorders'],
-            ['icon'=>'ti ti-receipt','label'=>'Purchase Invoices',  'href'=>$u('/purchaseinvoices'),  'match'=>'/purchaseinvoices'],
-            ['icon'=>'ti ti-download','label'=>'Goods Receipts',    'href'=>$u('/goodsreceipts'),     'match'=>'/goodsreceipts'],
-            ['icon'=>'ti ti-rotate-rectangle','label'=>'Purchase Returns','href'=>$u('/purchasereturns'),'match'=>'/purchasereturns'],
-			['icon'=>'ti ti-wallet','label'=>'Payments In (AP)',    'href'=>$u('/supplierpayments'),   'match'=>'/supplierpayments'],
+            ['icon'=>'ti ti-users','label'=>$T('nav.suppliers','Suppliers'),            'href'=>$u('/suppliers'),         'match'=>'/suppliers'],
+            ['icon'=>'ti ti-file-description','label'=>$T('nav.purchase_orders','Purchase Orders'),'href'=>$u('/purchaseorders'),'match'=>'/purchaseorders'],
+            ['icon'=>'ti ti-receipt','label'=>$T('nav.purchase_invoices','Purchase Invoices'),  'href'=>$u('/purchaseinvoices'),  'match'=>'/purchaseinvoices'],
+            ['icon'=>'ti ti-download','label'=>$T('nav.goods_receipts','Goods Receipts'),    'href'=>$u('/goodsreceipts'),     'match'=>'/goodsreceipts'],
+            ['icon'=>'ti ti-rotate-rectangle','label'=>$T('nav.purchase_returns','Purchase Returns'),'href'=>$u('/purchasereturns'),'match'=>'/purchasereturns'],
+			['icon'=>'ti ti-wallet','label'=>$T('nav.supplier_payments','Payments Out (AP)'),    'href'=>$u('/supplierpayments'),   'match'=>'/supplierpayments'],
         ],
     ],
 
@@ -98,15 +107,15 @@ $menu = [
         'label' => $T('nav.inventory','Inventory'),
         'match' => ['/products','/categories','/makes','/models','/warehouses','/transfers','/adjustments','/reservations','/lowstock'],
         'items' => [
-            ['icon'=>'ti ti-box','label'=>'Products',        'href'=>$u('/products'),       'match'=>'/products'],
-            ['icon'=>'ti ti-category-2','label'=>'Categories','href'=>$u('/categories'),    'match'=>'/categories'],
-            ['icon'=>'ti ti-steering-wheel','label'=>'Makes','href'=>$u('/makes'),          'match'=>'/makes'],
-            ['icon'=>'ti ti-car','label'=>'Models',          'href'=>$u('/models'),         'match'=>'/models'],
-            ['icon'=>'ti ti-building-warehouse','label'=>'Warehouses','href'=>$u('/warehouses'),'match'=>'/warehouses'],
-            ['icon'=>'ti ti-arrows-exchange','label'=>'Transfers','href'=>$u('/transfers'), 'match'=>'/transfers'],
-            ['icon'=>'ti ti-adjustments-alt','label'=>'Adjustments','href'=>$u('/adjustments'), 'match'=>'/adjustments'],
-            ['icon'=>'ti ti-bookmark','label'=>'Reservations','href'=>$u('/reservations'), 'match'=>'/reservations'],
-            ['icon'=>'ti ti-bell','label'=>'Low Stock','href'=>$u('/lowstock'),             'match'=>'/lowstock'],
+            ['icon'=>'ti ti-box','label'=>$T('nav.products','Products'),        'href'=>$u('/products'),       'match'=>'/products'],
+            ['icon'=>'ti ti-category-2','label'=>$T('nav.categories','Categories'),'href'=>$u('/categories'),    'match'=>'/categories'],
+            ['icon'=>'ti ti-steering-wheel','label'=>$T('nav.makes','Makes'),'href'=>$u('/makes'),          'match'=>'/makes'],
+            ['icon'=>'ti ti-car','label'=>$T('nav.models','Models'),          'href'=>$u('/models'),         'match'=>'/models'],
+            ['icon'=>'ti ti-building-warehouse','label'=>$T('nav.warehouses','Warehouses'),'href'=>$u('/warehouses'),'match'=>'/warehouses'],
+            ['icon'=>'ti ti-arrows-exchange','label'=>$T('nav.transfers','Transfers'),'href'=>$u('/transfers'), 'match'=>'/transfers'],
+            ['icon'=>'ti ti-adjustments-alt','label'=>$T('nav.adjustments','Adjustments'),'href'=>$u('/adjustments'), 'match'=>'/adjustments'],
+            ['icon'=>'ti ti-bookmark','label'=>$T('nav.reservations','Reservations'),'href'=>$u('/reservations'), 'match'=>'/reservations'],
+            ['icon'=>'ti ti-bell','label'=>$T('nav.low_stock','Low Stock'),'href'=>$u('/lowstock'),             'match'=>'/lowstock'],
         ],
     ],
 
@@ -117,8 +126,8 @@ $menu = [
         'label' => $T('nav.crm','CRM'),
         'match' => ['/customers','/contacts'],
         'items' => [
-            ['icon'=>'ti ti-user','label'=>'Clients', 'href'=>$u('/customers'), 'match'=>'/customers'],
-            ['icon'=>'ti ti-address-book','label'=>'Contacts', 'href'=>$u('/contacts'), 'match'=>'/contacts'],
+            ['icon'=>'ti ti-user','label'=>$T('nav.customers','Clients'), 'href'=>$u('/customers'), 'match'=>'/customers'],
+            ['icon'=>'ti ti-address-book','label'=>$T('nav.contacts','Contacts'), 'href'=>$u('/contacts'), 'match'=>'/contacts'],
         ],
     ],
 
@@ -129,11 +138,11 @@ $menu = [
         'label' => $T('nav.reports','Reports'),
         'match' => ['/reports'],
         'items' => [
-            ['icon'=>'ti ti-report-money','label'=>'Sales',       'href'=>$u('/reports/sales'),     'match'=>'/reports/sales'],
-            ['icon'=>'ti ti-report-analytics','label'=>'Purchasing','href'=>$u('/reports/purchasing'),'match'=>'/reports/purchasing'],
-            ['icon'=>'ti ti-report-search','label'=>'Inventory',  'href'=>$u('/reports/inventory-valuation'), 'match'=>'/reports/inventory-valuation'],
-            ['icon'=>'ti ti-currency-dollar','label'=>'AR',       'href'=>$u('/reports/ar-aging'),        'match'=>'/reports/ar-aging'],
-            ['icon'=>'ti ti-currency-dollar-off','label'=>'AP',   'href'=>$u('/reports/ap-aging'),        'match'=>'/reports/ap-aging'],
+            ['icon'=>'ti ti-report-money','label'=>$T('nav.sales_reports','Sales'),       'href'=>$u('/reports/sales'),     'match'=>'/reports/sales'],
+            ['icon'=>'ti ti-report-analytics','label'=>$T('nav.purchasing_reports','Purchasing'),'href'=>$u('/reports/purchasing'),'match'=>'/reports/purchasing'],
+            ['icon'=>'ti ti-report-search','label'=>$T('nav.inventory_reports','Inventory'),  'href'=>$u('/reports/inventory-valuation'), 'match'=>'/reports/inventory-valuation'],
+            ['icon'=>'ti ti-currency-dollar','label'=>$T('nav.ar_reports','AR'),       'href'=>$u('/reports/ar-aging'),        'match'=>'/reports/ar-aging'],
+            ['icon'=>'ti ti-currency-dollar-off','label'=>$T('nav.ap_reports','AP'),   'href'=>$u('/reports/ap-aging'),        'match'=>'/reports/ap-aging'],
         ],
     ],
 
@@ -144,12 +153,12 @@ $menu = [
         'label' => $T('nav.settings','Settings'),
         'match' => ['/users','/roles','/settings/tax-currency','/settings/units-sequences','/translations','/notifications','/integrations'],
         'items' => [
-            ['icon'=>'ti ti-users','label'=>'Users & Roles',      'href'=>$u('/users'),                   'match'=>'/users'],
-            ['icon'=>'ti ti-calculator','label'=>'Taxes & Currency','href'=>$u('/settings/tax-currency'), 'match'=>'/settings/tax-currency'],
-            ['icon'=>'ti ti-ruler-measure','label'=>'Units & Sequences','href'=>$u('/settings/units-sequences'),'match'=>'/settings/units-sequences'],
-            ['icon'=>'ti ti-language','label'=>'Translations',    'href'=>$u('/translations'),            'match'=>'/translations'],
-            ['icon'=>'ti ti-bell','label'=>'Notifications',       'href'=>$u('/notifications'),           'match'=>'/notifications'],
-            ['icon'=>'ti ti-plug-connected','label'=>'Integrations','href'=>$u('/integrations'),          'match'=>'/integrations'],
+            ['icon'=>'ti ti-users','label'=>$T('nav.users','Users & Roles'),      'href'=>$u('/users'),                   'match'=>'/users'],
+            ['icon'=>'ti ti-calculator','label'=>$T('nav.tax_currency','Taxes & Currency'),'href'=>$u('/settings/tax-currency'), 'match'=>'/settings/tax-currency'],
+            ['icon'=>'ti ti-ruler-measure','label'=>$T('nav.units_sequences','Units & Sequences'),'href'=>$u('/settings/units-sequences'),'match'=>'/settings/units-sequences'],
+            ['icon'=>'ti ti-language','label'=>$T('nav.translations','Translations'),    'href'=>$u('/translations'),            'match'=>'/translations'],
+            ['icon'=>'ti ti-bell','label'=>$T('nav.notifications','Notifications'),       'href'=>$u('/notifications'),           'match'=>'/notifications'],
+            ['icon'=>'ti ti-plug-connected','label'=>$T('nav.integrations','Integrations'),'href'=>$u('/integrations'),          'match'=>'/integrations'],
         ],
     ],
 
@@ -160,10 +169,10 @@ $menu = [
         'label' => $T('nav.tools','Tools'),
         'match' => ['/import','/backups','/audit','/health'],
         'items' => [
-            ['icon'=>'ti ti-database-import','label'=>'Import/Export','href'=>$u('/import'),  'match'=>'/import'],
-            ['icon'=>'ti ti-database','label'=>'Backups',            'href'=>$u('/backups'), 'match'=>'/backups'],
-            ['icon'=>'ti ti-list-details','label'=>'Audit Log',      'href'=>$u('/audit'),   'match'=>'/audit'],
-            ['icon'=>'ti ti-heartbeat','label'=>'System Health',     'href'=>$u('/health'),  'match'=>'/health'],
+            ['icon'=>'ti ti-database-import','label'=>$T('nav.import_export','Import/Export'),'href'=>$u('/import'),  'match'=>'/import'],
+            ['icon'=>'ti ti-database','label'=>$T('nav.backups','Backups'),            'href'=>$u('/backups'), 'match'=>'/backups'],
+            ['icon'=>'ti ti-list-details','label'=>$T('nav.audit_log','Audit Log'),      'href'=>$u('/audit'),   'match'=>'/audit'],
+            ['icon'=>'ti ti-heartbeat','label'=>$T('nav.system_health','System Health'),     'href'=>$u('/health'),  'match'=>'/health'],
         ],
     ],
 ];

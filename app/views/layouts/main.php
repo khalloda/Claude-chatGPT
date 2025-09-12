@@ -11,9 +11,11 @@ $locale = $_SESSION['locale'] ?? 'en';
 $is_ar  = ($locale === 'ar');
 $dir    = $is_ar ? 'rtl' : 'ltr';
 
-// Helpers
+// Helpers and translation setup
+require_once __DIR__ . '/../../core/helpers.php';
+
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-$page_title = $page_title ?? (function_exists('t') ? t('app.title') : 'MI Spare Parts');
+$page_title = $page_title ?? \App\Core\t('app.title');
 
 // Current user (if any)
 $user = auth_check() ? (auth_user() ?? []) : null;
@@ -99,7 +101,7 @@ $u = function (string $path): string {
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center gap-2" href="<?= $u('/') ?>">
         <img src="/assets/images/logo.png" alt="logo" height="28">
-        <span class="fw-semibold"><?= $h(function_exists('t') ? t('app.title') : 'Spare Parts App') ?></span>
+        <span class="fw-semibold"><?= $h(\App\Core\t('app.title')) ?></span>
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav" aria-controls="topnav" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,7 +111,7 @@ $u = function (string $path): string {
       <div id="topnav" class="collapse navbar-collapse">
         <form class="ms-auto me-3" role="search" method="get" action="<?= $u('/search') ?>">
           <div class="input-group">
-            <input class="form-control" type="search" name="q" placeholder="<?= $h(function_exists('t') ? t('table.search_placeholder') : 'Search…') ?>">
+            <input class="form-control" type="search" name="q" placeholder="<?= $h(\App\Core\t('table.search_placeholder')) ?>">
             <button class="btn btn-outline-secondary" type="submit"><i class="ti ti-search"></i></button>
           </div>
         </form>
