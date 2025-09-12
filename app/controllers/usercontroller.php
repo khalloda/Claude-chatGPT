@@ -11,6 +11,13 @@ use function App\Core\redirect;
 
 final class UserController extends Controller
 {
+    public function index(): void
+    {
+        require_auth();
+        $rows = \App\Core\DB::conn()->query('SELECT id, email, role, created_at FROM users ORDER BY id ASC')->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $this->view('user/index', ['rows' => $rows, 'page_title' => 'Users & Roles']);
+    }
+
     public function profile(): void
     {
         require_auth();

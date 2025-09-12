@@ -90,6 +90,8 @@ $router->post('/logout', 'authcontroller@logout');
 // user profile
 $router->get('/profile', 'usercontroller@profile');
 $router->post('/profile/password', 'usercontroller@changepassword');
+// users admin
+$router->get('/users', 'usercontroller@index');
 
 // categories
 $router->get('/categories', 'categoriescontroller@index');
@@ -295,6 +297,15 @@ $router->get('/reports/inventory-valuation', 'reportscontroller@inventoryvaluati
 // summary reports
 $router->get('/reports/sales', 'reportscontroller@sales');
 $router->get('/reports/purchasing', 'reportscontroller@purchasing');
+
+// settings
+$router->get('/settings/tax-currency', 'settingscontroller@taxcurrency');
+$router->get('/settings/units-sequences', 'settingscontroller@unitssequences');
+
+// translations & notifications & integrations
+$router->get('/translations', 'translationscontroller@index');
+$router->get('/notifications', 'notificationscontroller@index');
+$router->get('/integrations', 'integrationscontroller@index');
 
 // stock transfers
 $router->get('/transfers', 'transferscontroller@index');

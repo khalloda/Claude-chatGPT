@@ -10,7 +10,8 @@ This document tracks issues, analysis, and fixes discovered during testing. The 
 - [ISSUE-0003: Available column shows 0 in Quote form](#issue-0003-available-column-shows-0-in-quote-form)
 - [ISSUE-0007: Customer Statement — empty payment ref, no links, date filter ignored](#issue-0007-customer-statement-—-empty-payment-ref-no-links-date-filter-ignored)
 - [ISSUE-0008: Supplier Statement — empty payment ref, no links, date filter parity](#issue-0008-supplier-statement-—-empty-payment-ref-no-links-date-filter-parity)
- - [ISSUE-0009: Reports routes 404 — sales and purchasing](#issue-0009-reports-routes-404-—-sales-and-purchasing)
+- [ISSUE-0009: Reports routes 404 — sales and purchasing](#issue-0009-reports-routes-404-—-sales-and-purchasing)
+ - [ISSUE-0010: Settings menu pages 404 (Users, Taxes & Currency, Units & Sequences, Translations, Notifications, Integrations)](#issue-0010-settings-menu-pages-404-users-taxes--currency-units--sequences-translations-notifications-integrations)
 
 ## Pending Issues
 
@@ -228,6 +229,40 @@ Related Issues: TODO
   - Views: Added `app/views/reports/sales.php` and `app/views/reports/purchasing.php` with filters, totals, and linkable refs.
   - Resilience: Wrapped union queries in try/catch with logged errors and a DATE()-based fallback per table to avoid 500s if SQL compatibility issues arise. See `reportscontroller@sales()` and `@purchasing()`.
   - 2025-09-12: User confirmed both reports now load — marking Closed.
+
+### ISSUE-0010: Settings menu pages 404 (Users, Taxes & Currency, Units & Sequences, Translations, Notifications, Integrations)
+
+- Issue ID & Title: ISSUE-0010 — Settings menu pages return 404
+- Description: The following URLs return "404 — Not Found": `/users`, `/settings/tax-currency`, `/settings/units-sequences`, `/translations`, `/notifications`, `/integrations`.
+- Suspected Location: Missing routes in `public/index.php` and missing controllers/views for these sections.
+- Severity: Minor (navigation), but necessary to avoid dead links.
+- Status: Needs Verification
+- Root Cause Analysis: Sidebar links existed but app had no routes or views implemented for the listed paths, causing router 404.
+- Implemented Fix:
+  - Routes added in `public/index.php`:
+    - `/users` → `usercontroller@index`
+    - `/settings/tax-currency` → `settingscontroller@taxcurrency`
+    - `/settings/units-sequences` → `settingscontroller@unitssequences`
+    - `/translations` → `translationscontroller@index`
+    - `/notifications` → `notificationscontroller@index`
+    - `/integrations` → `integrationscontroller@index`
+  - Controllers created:
+    - `app/controllers/SettingsController.php`
+    - `app/controllers/TranslationsController.php`
+    - `app/controllers/NotificationsController.php`
+    - `app/controllers/IntegrationsController.php`
+    - Extended `app/controllers/UserController.php` with `index()` to list users from `users` table.
+  - Views created (placeholders with basic content):
+    - `app/views/user/index.php`
+    - `app/views/settings/tax_currency.php`
+    - `app/views/settings/units_sequences.php`
+    - `app/views/translations/index.php`
+    - `app/views/notifications/index.php`
+    - `app/views/integrations/index.php`
+- Database/Migration Impact: None. Read-only query for users listing; no schema changes. Baseline `chatgpt2_mi.sql` unchanged.
+- Related Tests:
+  - Integration: Visit each URL; expect HTTP 200 and a basic page instead of 404.
+  - UI: Sidebar links navigate successfully; back links return to `/`.
 - Database/Migration Impact: None. Read-only queries against baseline tables. `chatgpt2_mi.sql` unchanged.
 - Related Tests:
   - Integration: Open `/reports/sales?from=YYYY-MM-01&to=YYYY-MM-DD` and `/reports/purchasing?...`; assert 200 OK and presence of totals.
