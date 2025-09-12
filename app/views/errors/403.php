@@ -6,7 +6,10 @@
  * Safe for production - no sensitive data exposure.
  */
 
-$pageTitle = 'Access Denied';
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$pageTitle = $t('errors.access_denied');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -163,18 +166,18 @@ $pageTitle = 'Access Denied';
     <div class="error-container">
         <div class="error-icon">🔒</div>
         
-        <h1>Access Denied</h1>
+        <h1><?= $t('errors.access_denied') ?></h1>
         
         <div class="error-message">
-            You don't have permission to access this resource. This could be due to:
+            <?= $t('errors.access_denied_message') ?>
         </div>
         
         <div class="security-notice">
-            <strong>Common reasons:</strong><br>
-            • You're not logged in<br>
-            • You don't have the required permissions<br>
-            • Your session has expired<br>
-            • The resource requires authentication
+            <strong><?= $t('errors.common_reasons') ?></strong><br>
+            • <?= $t('errors.not_logged_in') ?><br>
+            • <?= $t('errors.insufficient_permissions') ?><br>
+            • <?= $t('errors.session_expired') ?><br>
+            • <?= $t('errors.authentication_required') ?>
         </div>
         
         <div class="error-id">
@@ -182,12 +185,12 @@ $pageTitle = 'Access Denied';
         </div>
         
         <div class="action-buttons">
-            <a href="/" class="btn btn-primary">Return Home</a>
-            <a href="/login" class="btn btn-secondary">Login</a>
+            <a href="/" class="btn btn-primary"><?= $t('common.return_home') ?></a>
+            <a href="/login" class="btn btn-secondary"><?= $t('auth.login') ?></a>
         </div>
         
         <div class="login-link">
-            <p>If you believe this is an error, please <a href="/login">sign in</a> or contact your administrator.</p>
+            <p><?= $t('errors.contact_admin_message') ?></p>
         </div>
         
         <div class="timestamp">
