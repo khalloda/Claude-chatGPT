@@ -194,12 +194,12 @@ function time_ago(string $datetime, bool $full = false): string {
     if (empty($datetime)) return 'never';
     
     try {
-        $now = new DateTime();
-        $ago = new DateTime($datetime);
+        $now = new \DateTime();
+        $ago = new \DateTime($datetime);
         $diff = $now->diff($ago);
 
-        $diff->w = floor($diff->d / 7);
-        $diff->d -= $diff->w * 7;
+        $weeks = floor($diff->d / 7);
+        $days = $diff->d % 7;
 
         $string = array(
             'y' => 'year',
@@ -212,8 +212,17 @@ function time_ago(string $datetime, bool $full = false): string {
         );
         
         foreach ($string as $k => &$v) {
-            if ($diff->$k) {
-                $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+            $value = 0;
+            if ($k === 'w') {
+                $value = $weeks;
+            } elseif ($k === 'd') {
+                $value = $days;
+            } else {
+                $value = $diff->$k;
+            }
+            
+            if ($value) {
+                $v = $value . ' ' . $v . ($value > 1 ? 's' : '');
             } else {
                 unset($string[$k]);
             }
@@ -279,4 +288,109 @@ function get_company_info(): array {
             'company_website' => ['value' => '']
         ];
     }
+}
+
+/**
+ * Translation and Localization Functions
+ */
+
+/**
+ * Get current application locale
+ */
+function get_locale(): string {
+    if (!isset($_SESSION)) {
+        @session_start();
+    }
+    return $_SESSION['locale'] ?? 'en';
+}
+
+/**
+ * Set application locale
+ */
+function set_locale(string $locale): void {
+    if (!isset($_SESSION)) {
+        @session_start();
+    }
+    if (in_array($locale, ['en', 'ar'])) {
+        $_SESSION['locale'] = $locale;
+    }
+}
+
+/**
+ * Check if current locale is RTL (Right-to-Left)
+ */
+function is_rtl(): bool {
+    return get_locale() === 'ar';
+}
+
+/**
+ * Get translation for a key
+ */
+function t(string $key, array $params = []): string {
+    static $translations = [];
+    
+    $locale = get_locale();
+    
+    // Load translations for current locale if not already loaded
+    if (!isset($translations[$locale])) {
+        $langFile = __DIR__ . "/../lang/{$locale}.php";
+        if (file_exists($langFile)) {
+            $translations[$locale] = include $langFile;
+        } else {
+            $translations[$locale] = [];
+        }
+    }
+    
+    // Load English as fallback if needed
+    if ($locale !== 'en' && !isset($translations['en'])) {
+        $englishFile = __DIR__ . "/../lang/en.php";
+        if (file_exists($englishFile)) {
+            $translations['en'] = include $englishFile;
+        } else {
+            $translations['en'] = [];
+        }
+    }
+    
+    // Get translation by flat key (e.g., 'app.title')
+    if (isset($translations[$locale][$key])) {
+        $value = $translations[$locale][$key];
+    } elseif ($locale !== 'en' && isset($translations['en'][$key])) {
+        // Fallback to English if translation not found in current locale
+        $value = $translations['en'][$key];
+    } else {
+        return $key; // Return key if no translation found
+    }
+    
+    // Replace parameters if provided
+    if (!empty($params) && is_string($value)) {
+        foreach ($params as $param => $replacement) {
+            $value = str_replace("{{$param}}", (string)$replacement, $value);
+        }
+    }
+    
+    return is_string($value) ? $value : $key;
+}
+
+/**
+ * Alias for t() function for shorter syntax
+ */
+function __(string $key, array $params = []): string {
+    return t($key, $params);
+}
+
+/**
+ * Get all available locales
+ */
+function get_available_locales(): array {
+    return [
+        'en' => 'English',
+        'ar' => 'العربية'
+    ];
+}
+
+/**
+ * Get locale direction (ltr/rtl)
+ */
+function get_locale_direction(): string {
+    return is_rtl() ? 'rtl' : 'ltr';
 }

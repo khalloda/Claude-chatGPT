@@ -319,6 +319,7 @@ $router->get('/settings/units-sequences', 'settingscontroller@unitssequences');
 
 // translations & notifications & integrations
 $router->get('/translations', 'translationscontroller@index');
+$router->get('/locale', 'translationscontroller@switchLocale');
 $router->get('/notifications', 'notificationscontroller@index');
 $router->get('/integrations', 'integrationscontroller@index');
 
