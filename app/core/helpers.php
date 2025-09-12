@@ -141,3 +141,50 @@ function auth_check(): bool
 {
     return isset($_SESSION['user']);
 }
+
+/** Authorization helpers (role/permission based)
+ * Supports two modes:
+ *  - Legacy: users.role column with value 'admin' grants all.
+ *  - RBAC tables (pending migration): roles, permissions, user_roles, role_permissions.
+ */
+function db_table_exists(string $name): bool {
+    try {
+        $pdo = DB::conn();
+        $st = $pdo->prepare("SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1");
+        $st->execute([$name]);
+        return (bool)$st->fetchColumn();
+    } catch (\Throwable $e) { return false; }
+}
+
+function user_has_permission(string $permission): bool {
+    if (!auth_check()) return false;
+    $u = auth_user();
+    // Legacy shortcut: admin role column grants all
+    $legacyRole = strtolower((string)($u['role'] ?? ''));
+    if ($legacyRole === 'admin' || $legacyRole === 'superadmin') return true;
+
+    // If RBAC tables are unavailable, default to deny (non-admin)
+    if (!db_table_exists('roles') || !db_table_exists('permissions') || !db_table_exists('user_roles') || !db_table_exists('role_permissions')) {
+        return false;
+    }
+
+    try {
+        $pdo = DB::conn();
+        $sql = "SELECT 1
+                FROM user_roles ur
+                JOIN role_permissions rp ON rp.role_id = ur.role_id
+                JOIN permissions p ON p.id = rp.permission_id
+                WHERE ur.user_id = ? AND p.slug = ? LIMIT 1";
+        $st = $pdo->prepare($sql);
+        $st->execute([(int)$u['id'], $permission]);
+        return (bool)$st->fetchColumn();
+    } catch (\Throwable $e) { return false; }
+}
+
+function require_permission(string $permission): void {
+    require_auth();
+    if (!user_has_permission($permission)) {
+        flash_set('error', 'You do not have permission to perform this action.');
+        redirect('/');
+    }
+}

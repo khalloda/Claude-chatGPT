@@ -1,0 +1,35 @@
+<?php use function App\Core\base_url; /** @var array $roles */ ?>
+<section>
+  <h2>Roles</h2>
+  <p class="no-print" style="margin:8px 0; display:flex; gap:12px; align-items:center;">
+    <a class="btn btn-sm btn-outline-secondary" href="<?= base_url('/users') ?>">Back</a>
+    <a class="btn btn-sm btn-primary" href="<?= base_url('/roles/create') ?>">New Role</a>
+  </p>
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr>
+      <th style="border-bottom:1px solid #eee;padding:8px;">ID</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Name</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Slug</th>
+      <th style="border-bottom:1px solid #eee;padding:8px;">Actions</th>
+    </tr></thead>
+    <tbody>
+      <?php foreach ($roles as $r): ?>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= (int)$r['id'] ?></td>
+        <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars($r['name'],ENT_QUOTES) ?></td>
+        <td style="padding:8px;border-bottom:1px solid #f2f2f4;"><?= htmlspecialchars($r['slug'],ENT_QUOTES) ?></td>
+        <td style="padding:8px;border-bottom:1px solid #f2f2f4;">
+          <a class="btn btn-sm btn-outline-secondary" href="<?= base_url('/roles/edit?id='.(int)$r['id']) ?>">Edit</a>
+          <form method="post" action="<?= base_url('/roles/delete') ?>" style="display:inline-block;" onsubmit="return confirm('Delete this role?');">
+            <?= App\Core\csrf_field() ?>
+            <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <?php endforeach; ?>
+      <?php if (!$roles): ?><tr><td colspan="4" style="padding:12px;">No roles found.</td></tr><?php endif; ?>
+    </tbody>
+  </table>
+</section>
+

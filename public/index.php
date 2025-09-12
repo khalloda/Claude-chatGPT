@@ -92,6 +92,11 @@ $router->get('/profile', 'usercontroller@profile');
 $router->post('/profile/password', 'usercontroller@changepassword');
 // users admin
 $router->get('/users', 'usercontroller@index');
+$router->get('/users/create', 'usercontroller@create');
+$router->post('/users', 'usercontroller@store');
+$router->get('/users/edit', 'usercontroller@edit');
+$router->post('/users/update', 'usercontroller@update');
+$router->post('/users/delete', 'usercontroller@destroy');
 
 // categories
 $router->get('/categories', 'categoriescontroller@index');
@@ -306,6 +311,17 @@ $router->get('/settings/units-sequences', 'settingscontroller@unitssequences');
 $router->get('/translations', 'translationscontroller@index');
 $router->get('/notifications', 'notificationscontroller@index');
 $router->get('/integrations', 'integrationscontroller@index');
+
+// roles & permissions
+$router->get('/roles', 'rolescontroller@index');
+$router->get('/roles/create', 'rolescontroller@create');
+$router->get('/roles/edit', 'rolescontroller@edit');
+$router->post('/roles', 'rolescontroller@store');
+$router->post('/roles/update', 'rolescontroller@update');
+$router->post('/roles/delete', 'rolescontroller@destroy');
+$router->get('/permissions', 'permissionscontroller@index');
+$router->post('/permissions', 'permissionscontroller@store');
+$router->post('/permissions/delete', 'permissionscontroller@destroy');
 
 // stock transfers
 $router->get('/transfers', 'transferscontroller@index');
