@@ -95,8 +95,10 @@ $router->get('/users', 'usercontroller@index');
 $router->get('/users/create', 'usercontroller@create');
 $router->post('/users', 'usercontroller@store');
 $router->get('/users/edit', 'usercontroller@edit');
+$router->get('/users/show', 'usercontroller@show');
 $router->post('/users/update', 'usercontroller@update');
 $router->post('/users/delete', 'usercontroller@destroy');
+$router->post('/users/toggle-status', 'usercontroller@toggleStatus');
 
 // categories
 $router->get('/categories', 'categoriescontroller@index');

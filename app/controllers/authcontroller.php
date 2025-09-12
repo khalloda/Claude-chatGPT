@@ -63,6 +63,18 @@ final class AuthController extends Controller
                 'role'  => $user['role'],
             ];
             
+            // Update last login timestamp
+            try {
+                $updateStmt = DB::conn()->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?');
+                $updateStmt->execute([(int)$user['id']]);
+            } catch (\Throwable $e) {
+                // Don't fail login if we can't update last login time
+                Logger::warning('Failed to update last login time', [
+                    'user_id' => (int)$user['id'],
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
             Logger::authentication('Login successful', [
                 'user_id' => (int)$user['id'],
                 'email' => $user['email'],

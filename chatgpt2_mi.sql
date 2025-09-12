@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 12, 2025 at 07:06 AM
+-- Generation Time: Sep 12, 2025 at 01:53 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -249,7 +249,7 @@ INSERT INTO `invoices` (`id`, `inv_no`, `sales_order_id`, `customer_id`, `tax_ra
 (1, 'INV2025-0001', 1, 1, 10.00, 6000.00, 600.00, 6600.00, 6600.00, 'paid', '2025-08-30 09:35:44', '2025-08-30 10:00:51', 0.00),
 (2, 'INV2025-0006', 7, 1, 10.00, 650.00, 65.00, 715.00, 0.00, 'unpaid', '2025-09-02 11:37:20', '2025-09-02 12:26:59', 0.00),
 (3, 'INV2025-0012', 9, 1, 20.00, 450.00, 90.00, 540.00, 0.00, '', '2025-09-11 08:09:45', NULL, 0.00),
-(4, 'INV2025-0016', 10, 1, 0.00, 300.00, 0.00, 300.00, 0.00, '', '2025-09-11 10:44:42', NULL, 0.00);
+(4, 'INV2025-0016', 10, 1, 0.00, 300.00, 0.00, 300.00, 300.00, 'paid', '2025-09-11 10:44:42', '2025-09-12 10:33:21', 0.00);
 
 -- --------------------------------------------------------
 
@@ -300,7 +300,7 @@ CREATE TABLE IF NOT EXISTS `invoice_payments` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_payments_invoice` (`invoice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `invoice_payments`
@@ -309,7 +309,8 @@ CREATE TABLE IF NOT EXISTS `invoice_payments` (
 INSERT INTO `invoice_payments` (`id`, `invoice_id`, `paid_at`, `method`, `reference`, `amount`, `note`, `created_at`) VALUES
 (1, 1, '2025-08-30 12:46:00', 'cash', '', 1000.00, '', '2025-08-30 09:46:46'),
 (2, 1, '2025-08-29 12:50:00', 'cash', '', 1000.00, '', '2025-08-30 10:00:10'),
-(3, 1, '2025-08-30 13:00:00', 'Wire', '', 4600.00, '', '2025-08-30 10:00:51');
+(3, 1, '2025-08-30 13:00:00', 'Wire', '', 4600.00, '', '2025-08-30 10:00:51'),
+(6, 4, '2025-09-12 00:00:00', 'Cash', NULL, 300.00, NULL, '2025-09-12 10:33:21');
 
 -- --------------------------------------------------------
 
@@ -354,7 +355,7 @@ CREATE TABLE IF NOT EXISTS `notes` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_entity` (`entity_type`,`entity_id`,`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `notes`
@@ -362,7 +363,9 @@ CREATE TABLE IF NOT EXISTS `notes` (
 
 INSERT INTO `notes` (`id`, `entity_type`, `entity_id`, `is_public`, `body`, `created_by`, `created_by_id`, `created_at`) VALUES
 (1, 'quote', 1, 0, 'This order will be late.', '', NULL, '2025-08-30 06:21:59'),
-(2, 'quote', 1, 1, 'Transfer will be on HSBC', '', NULL, '2025-08-30 06:22:18');
+(2, 'quote', 1, 1, 'Transfer will be on HSBC', '', NULL, '2025-08-30 06:22:18'),
+(3, 'sales_invoice', 4, 1, 'Send to client ASAP', '', NULL, '2025-09-12 10:31:55'),
+(4, 'sales_invoice', 4, 1, 'Send to Client ASAP', '', NULL, '2025-09-12 10:32:40');
 
 -- --------------------------------------------------------
 
