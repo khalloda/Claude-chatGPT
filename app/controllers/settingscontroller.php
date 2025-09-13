@@ -30,7 +30,7 @@ final class SettingsController extends Controller
         $baseCurrency = Currency::getBase();
         
         $this->view('settings/tax_currency', [
-            'page_title' => 'Taxes & Currency Settings',
+            'page_title' => \App\Core\t('settings.taxes_currency_settings'),
             'company_settings' => $companySettings,
             'currency_settings' => $currencySettings,
             'tax_settings' => $taxSettings,
@@ -120,7 +120,7 @@ final class SettingsController extends Controller
         $taxTypes = TaxRate::getTypes();
         
         $this->view('settings/tax_rates', [
-            'page_title' => 'Tax Rate Management',
+            'page_title' => \App\Core\t('settings.tax_rate_management'),
             'tax_rates' => $taxRates,
             'tax_types' => $taxTypes
         ]);
@@ -255,7 +255,7 @@ final class SettingsController extends Controller
         $baseCurrency = Currency::getBase();
         
         $this->view('settings/currencies', [
-            'page_title' => 'Currency Management',
+            'page_title' => \App\Core\t('settings.currency_management'),
             'currencies' => $currencies,
             'base_currency' => $baseCurrency
         ]);

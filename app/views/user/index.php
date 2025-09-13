@@ -66,7 +66,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       </div>
       <div class="col-md-2 d-flex align-items-end">
         <button type="submit" class="btn btn-primary me-2">
-          <i class="fas fa-search"></i> Search
+          <i class="fas fa-search"></i> <?= $t('common.search') ?>
         </button>
         <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary">
           <i class="fas fa-times"></i>
@@ -80,10 +80,10 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 <?php if (isset($pagination)): ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <span class="text-muted">
-    Showing <?= count($rows) ?> of <?= $pagination['total'] ?> users
+    <?= str_replace(['{count}', '{total}'], [count($rows), $pagination['total']], $t('users.showing_users')) ?>
   </span>
   <div class="text-muted">
-    Page <?= $pagination['current'] ?> of <?= $pagination['pages'] ?>
+    <?= str_replace(['{current}', '{pages}'], [$pagination['current'], $pagination['pages']], $t('users.page_info')) ?>
   </div>
 </div>
 <?php endif; ?>
@@ -95,14 +95,14 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <table class="table table-hover mb-0">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Legacy Role</th>
-            <th>RBAC Roles</th>
-            <th>Last Login</th>
-            <th>Created</th>
-            <th>Actions</th>
+            <th><?= $t('common.id') ?></th>
+            <th><?= $t('common.email') ?></th>
+            <th><?= $t('users.status') ?></th>
+            <th><?= $t('users.legacy_role') ?></th>
+            <th><?= $t('users.rbac_roles') ?></th>
+            <th><?= $t('users.last_login') ?></th>
+            <th><?= $t('users.created') ?></th>
+            <th><?= $t('common.actions') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -110,7 +110,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
           <tr>
             <td colspan="8" class="text-center py-4 text-muted">
               <i class="fas fa-users fa-2x mb-2"></i><br>
-              No users found matching your criteria.
+              <?= $t('users.no_users_found_criteria') ?>
             </td>
           </tr>
           <?php else: ?>
@@ -144,7 +144,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
               $badgeClass = $statusClass[$userStatus] ?? 'secondary';
               ?>
               <span class="badge bg-<?= $badgeClass ?>">
-                <?= ucfirst(htmlspecialchars($userStatus, ENT_QUOTES)) ?>
+                <?= $t('users.status_' . $userStatus) ?>
               </span>
             </td>
             <td>
@@ -165,7 +165,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                 <?php endforeach; ?>
               </div>
               <?php else: ?>
-              <span class="text-muted">No RBAC roles</span>
+              <span class="text-muted"><?= $t('users.no_rbac_roles') ?></span>
               <?php endif; ?>
             </td>
             <td>
@@ -174,7 +174,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                 <?= date('M j, Y g:i A', strtotime($user['last_login_at'])) ?>
               </small>
               <?php else: ?>
-              <span class="text-muted">Never</span>
+              <span class="text-muted"><?= $t('users.never') ?></span>
               <?php endif; ?>
             </td>
             <td>

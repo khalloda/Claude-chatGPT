@@ -49,38 +49,38 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <div class="card h-100">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="fas fa-building"></i> Company Information
+            <i class="fas fa-building"></i> <?= $t('settings.company_information') ?>
           </h5>
         </div>
         <div class="card-body">
           <div class="mb-3">
-            <label for="company_name" class="form-label">Company Name</label>
+            <label for="company_name" class="form-label"><?= $t('settings.company_name') ?></label>
             <input type="text" class="form-control" id="company_name" name="company[company_name]" 
-                   value="<?= htmlspecialchars($company_settings['company_name']['value'] ?? '', ENT_QUOTES) ?>"
-                   placeholder="Your Company Name">
+                   value="<?= $h($company_settings['company_name']['value'] ?? '') ?>"
+                   placeholder="<?= $t('settings.company_name_placeholder') ?>">
           </div>
           
           <div class="mb-3">
-            <label for="company_address" class="form-label">Address</label>
+            <label for="company_address" class="form-label"><?= $t('settings.address') ?></label>
             <textarea class="form-control" id="company_address" name="company[company_address]" rows="3"
-                      placeholder="Company address for invoices"><?= htmlspecialchars($company_settings['company_address']['value'] ?? '', ENT_QUOTES) ?></textarea>
+                      placeholder="<?= $t('settings.company_address_placeholder') ?>"><?= $h($company_settings['company_address']['value'] ?? '') ?></textarea>
           </div>
           
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="company_phone" class="form-label">Phone</label>
+                <label for="company_phone" class="form-label"><?= $t('common.phone') ?></label>
                 <input type="tel" class="form-control" id="company_phone" name="company[company_phone]" 
-                       value="<?= htmlspecialchars($company_settings['company_phone']['value'] ?? '', ENT_QUOTES) ?>"
-                       placeholder="+20 xxx xxx xxxx">
+                       value="<?= $h($company_settings['company_phone']['value'] ?? '') ?>"
+                       placeholder="<?= $t('settings.phone_placeholder') ?>">
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="company_email" class="form-label">Email</label>
+                <label for="company_email" class="form-label"><?= $t('common.email') ?></label>
                 <input type="email" class="form-control" id="company_email" name="company[company_email]" 
-                       value="<?= htmlspecialchars($company_settings['company_email']['value'] ?? '', ENT_QUOTES) ?>"
-                       placeholder="info@company.com">
+                       value="<?= $h($company_settings['company_email']['value'] ?? '') ?>"
+                       placeholder="<?= $t('settings.email_placeholder') ?>">
               </div>
             </div>
           </div>
@@ -93,12 +93,12 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <div class="card h-100">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="fas fa-dollar-sign"></i> Currency Settings
+            <i class="fas fa-dollar-sign"></i> <?= $t('settings.currency_settings') ?>
           </h5>
         </div>
         <div class="card-body">
           <div class="mb-3">
-            <label for="base_currency" class="form-label">Base Currency</label>
+            <label for="base_currency" class="form-label"><?= $t('settings.base_currency') ?></label>
             <select class="form-select" id="base_currency" name="currency[base_currency]">
               <?php 
               $currentBaseCurrency = $currency_settings['base_currency']['value'] ?? 'EGP';
@@ -113,26 +113,26 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
           </div>
           
           <div class="mb-3">
-            <label for="currency_symbol" class="form-label">Currency Symbol</label>
+            <label for="currency_symbol" class="form-label"><?= $t('settings.currency_symbol') ?></label>
             <input type="text" class="form-control" id="currency_symbol" name="currency[currency_symbol]" 
-                   value="<?= htmlspecialchars($currency_settings['currency_symbol']['value'] ?? 'EGP', ENT_QUOTES) ?>"
+                   value="<?= $h($currency_settings['currency_symbol']['value'] ?? 'EGP') ?>"
                    placeholder="EGP" maxlength="10">
           </div>
           
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="currency_position" class="form-label">Symbol Position</label>
+                <label for="currency_position" class="form-label"><?= $t('settings.symbol_position') ?></label>
                 <select class="form-select" id="currency_position" name="currency[currency_position]">
                   <?php $currentPosition = $currency_settings['currency_position']['value'] ?? 'after'; ?>
-                  <option value="before" <?= $currentPosition === 'before' ? 'selected' : '' ?>>Before ($ 100.00)</option>
-                  <option value="after" <?= $currentPosition === 'after' ? 'selected' : '' ?>>After (100.00 EGP)</option>
+                  <option value="before" <?= $currentPosition === 'before' ? 'selected' : '' ?>><?= $t('settings.before_symbol') ?></option>
+                  <option value="after" <?= $currentPosition === 'after' ? 'selected' : '' ?>><?= $t('settings.after_symbol') ?></option>
                 </select>
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="decimal_places" class="form-label">Decimal Places</label>
+                <label for="decimal_places" class="form-label"><?= $t('settings.decimal_places') ?></label>
                 <select class="form-select" id="decimal_places" name="currency[decimal_places]">
                   <?php $currentDecimals = $currency_settings['decimal_places']['value'] ?? 2; ?>
                   <option value="0" <?= $currentDecimals == 0 ? 'selected' : '' ?>>0 (100)</option>
@@ -153,26 +153,26 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <div class="card">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="fas fa-percentage"></i> Tax Settings
+            <i class="fas fa-percentage"></i> <?= $t('settings.tax_settings') ?>
           </h5>
         </div>
         <div class="card-body">
           <div class="mb-3">
-            <label for="default_tax_rate" class="form-label">Default Tax Rate (%)</label>
+            <label for="default_tax_rate" class="form-label"><?= $t('settings.default_tax_rate') ?></label>
             <input type="number" class="form-control" id="default_tax_rate" name="tax[default_tax_rate]" 
-                   value="<?= htmlspecialchars($tax_settings['default_tax_rate']['value'] ?? '14', ENT_QUOTES) ?>"
+                   value="<?= $h($tax_settings['default_tax_rate']['value'] ?? '14') ?>"
                    min="0" max="100" step="0.01" placeholder="14.00">
           </div>
           
           <div class="mb-3">
-            <label for="tax_calculation_method" class="form-label">Tax Calculation Method</label>
+            <label for="tax_calculation_method" class="form-label"><?= $t('settings.tax_calculation_method') ?></label>
             <select class="form-select" id="tax_calculation_method" name="tax[tax_calculation_method]">
               <?php $currentMethod = $tax_settings['tax_calculation_method']['value'] ?? 'exclusive'; ?>
               <option value="exclusive" <?= $currentMethod === 'exclusive' ? 'selected' : '' ?>>
-                Tax Exclusive (Tax added to amount)
+                <?= $t('settings.tax_exclusive') ?>
               </option>
               <option value="inclusive" <?= $currentMethod === 'inclusive' ? 'selected' : '' ?>>
-                Tax Inclusive (Tax included in amount)
+                <?= $t('settings.tax_inclusive') ?>
               </option>
             </select>
           </div>
@@ -185,14 +185,14 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <div class="card">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="fas fa-list"></i> Current Tax Rates
+            <i class="fas fa-list"></i> <?= $t('settings.current_tax_rates') ?>
           </h5>
         </div>
         <div class="card-body">
           <?php if (empty($tax_rates)): ?>
           <div class="text-center text-muted py-3">
             <i class="fas fa-percentage fa-2x mb-2"></i>
-            <div>No tax rates configured</div>
+            <div><?= $t('settings.no_tax_rates_configured') ?></div>
           </div>
           <?php else: ?>
           <div class="row g-2">
@@ -207,7 +207,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                   <div class="text-end">
                     <div class="fw-bold"><?= number_format($rate['rate'], 2) ?>%</div>
                     <?php if ($rate['is_default']): ?>
-                    <span class="badge bg-primary">Default</span>
+                    <span class="badge bg-primary"><?= $t('settings.default') ?></span>
                     <?php endif; ?>
                   </div>
                 </div>
@@ -227,25 +227,25 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
       <div class="card">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            <i class="fas fa-coins"></i> Active Currencies
+            <i class="fas fa-coins"></i> <?= $t('settings.active_currencies') ?>
           </h5>
         </div>
         <div class="card-body">
           <?php if (empty($currencies)): ?>
           <div class="text-center text-muted py-3">
             <i class="fas fa-coins fa-2x mb-2"></i>
-            <div>No currencies configured</div>
+            <div><?= $t('settings.no_currencies_configured') ?></div>
           </div>
           <?php else: ?>
           <div class="table-responsive">
             <table class="table table-sm">
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Name</th>
-                  <th>Symbol</th>
-                  <th>Exchange Rate</th>
-                  <th>Status</th>
+                  <th><?= $t('settings.code') ?></th>
+                  <th><?= $t('common.name') ?></th>
+                  <th><?= $t('settings.symbol') ?></th>
+                  <th><?= $t('settings.exchange_rate') ?></th>
+                  <th><?= $t('users.status') ?></th>
                 </tr>
               </thead>
               <tbody>
@@ -254,7 +254,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                   <td>
                     <span class="fw-medium"><?= htmlspecialchars($currency['code'], ENT_QUOTES) ?></span>
                     <?php if ($currency['is_base']): ?>
-                    <span class="badge bg-success ms-1">Base</span>
+                    <span class="badge bg-success ms-1"><?= $t('settings.base') ?></span>
                     <?php endif; ?>
                   </td>
                   <td><?= htmlspecialchars($currency['name'], ENT_QUOTES) ?></td>
@@ -262,7 +262,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                   <td><?= number_format($currency['exchange_rate'], 4) ?></td>
                   <td>
                     <span class="badge bg-<?= $currency['is_active'] ? 'success' : 'secondary' ?>">
-                      <?= $currency['is_active'] ? 'Active' : 'Inactive' ?>
+                      <?= $currency['is_active'] ? $t('users.status_active') : $t('users.status_inactive') ?>
                     </span>
                   </td>
                 </tr>
@@ -283,10 +283,10 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         <div class="card-body">
           <div class="d-flex justify-content-between">
             <a href="<?= base_url('/') ?>" class="btn btn-secondary">
-              <i class="fas fa-times"></i> Cancel
+              <i class="fas fa-times"></i> <?= $t('common.cancel') ?>
             </a>
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-save"></i> Save Settings
+              <i class="fas fa-save"></i> <?= $t('settings.save_settings') ?>
             </button>
           </div>
         </div>

@@ -73,7 +73,7 @@ final class UserController extends Controller
         
         $this->view('user/index', [
             'rows' => $rows,
-            'page_title' => 'User Management',
+            'page_title' => \App\Core\t('users.user_management'),
             'search' => $search,
             'status' => $status,
             'role' => $role,
