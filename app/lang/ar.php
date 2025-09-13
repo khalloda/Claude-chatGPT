@@ -378,6 +378,17 @@ return [
      * User Management & RBAC
      * ========================= */
     'users.title'              => 'إدارة المستخدمين',
+    'users.user_management'    => 'إدارة المستخدمين',
+    'users.add_user'           => 'إضافة مستخدم',
+    'users.create_new_user'    => 'إنشاء مستخدم جديد',
+    'users.back_to_users'      => 'العودة للمستخدمين',
+    'users.basic_information'  => 'المعلومات الأساسية',
+    'users.email_or_user_id'   => 'البريد الإلكتروني أو معرف المستخدم',
+    'users.all_statuses'       => 'جميع الحالات',
+    'users.all_roles'          => 'جميع الأدوار',
+    'users.legacy_role'        => 'الدور القديم',
+    'users.add_permission'     => 'إضافة صلاحية',
+    'users.no_permissions_found' => 'لم يتم العثور على صلاحيات',
     'users.list'               => 'المستخدمون',
     'users.create'             => 'إنشاء مستخدم',
     'users.edit'               => 'تعديل مستخدم',
@@ -886,6 +897,38 @@ return [
     'reports.31_60_days' => '31–60',
     'reports.61_90_days' => '61–90',
     'reports.90_plus_days' => '90+',
+
+    /* =========================
+     * Settings
+     * ========================= */
+    'settings.taxes_currency_settings' => 'إعدادات الضرائب والعملات',
+    'settings.manage_tax_rates' => 'إدارة معدلات الضرائب',
+    'settings.manage_currencies' => 'إدارة العملات',
+    'settings.back_to_settings' => 'العودة للإعدادات',
+    'settings.tax_rate_management' => 'إدارة معدلات الضرائب',
+    'settings.add_tax_rate' => 'إضافة معدل ضريبة',
+    'settings.currency_management' => 'إدارة العملات',
+    'settings.add_currency' => 'إضافة عملة',
+    'settings.units_sequences' => 'الوحدات والتسلسلات',
+    'settings.units_sequences_description' => 'هذه صفحة إعدادات مؤقتة. حدد وحدات القياس وتسلسلات ترقيم المستندات هنا (مثل INV، PO، PI).',
+
+    /* =========================
+     * Translation Management
+     * ========================= */
+    'translations.translation_management' => 'إدارة الترجمة',
+    'translations.translation_stats' => 'إحصائيات الترجمة',
+
+    /* =========================
+     * Notifications
+     * ========================= */
+    'notifications.notifications' => 'الإشعارات',
+    'notifications.notifications_description' => 'هذا مؤقت لتكوين إشعارات النظام وتكاملات البريد الإلكتروني/webhook.',
+
+    /* =========================
+     * Integrations
+     * ========================= */
+    'integrations.integrations' => 'التكاملات',
+    'integrations.integrations_description' => 'هذا مؤقت للتكاملات الخارجية (مثل المحاسبة، CRM، بوابات الدفع). قريباً.',
 
     'common.all'               => 'الكل',
     'common.none'              => 'لا شيء',

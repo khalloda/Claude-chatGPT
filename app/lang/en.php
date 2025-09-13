@@ -379,6 +379,17 @@ return [
      * User Management & RBAC
      * ========================= */
     'users.title'              => 'User Management',
+    'users.user_management'    => 'User Management',
+    'users.add_user'           => 'Add User',
+    'users.create_new_user'    => 'Create New User',
+    'users.back_to_users'      => 'Back to Users',
+    'users.basic_information'  => 'Basic Information',
+    'users.email_or_user_id'   => 'Email or User ID',
+    'users.all_statuses'       => 'All Statuses',
+    'users.all_roles'          => 'All Roles',
+    'users.legacy_role'        => 'Legacy Role',
+    'users.add_permission'     => 'Add Permission',
+    'users.no_permissions_found' => 'No permissions found',
     'users.list'               => 'Users',
     'users.create'             => 'Create User',
     'users.edit'               => 'Edit User',
@@ -887,6 +898,38 @@ return [
     'reports.31_60_days' => '31–60',
     'reports.61_90_days' => '61–90',
     'reports.90_plus_days' => '90+',
+
+    /* =========================
+     * Settings
+     * ========================= */
+    'settings.taxes_currency_settings' => 'Taxes & Currency Settings',
+    'settings.manage_tax_rates' => 'Manage Tax Rates',
+    'settings.manage_currencies' => 'Manage Currencies',
+    'settings.back_to_settings' => 'Back to Settings',
+    'settings.tax_rate_management' => 'Tax Rate Management',
+    'settings.add_tax_rate' => 'Add Tax Rate',
+    'settings.currency_management' => 'Currency Management',
+    'settings.add_currency' => 'Add Currency',
+    'settings.units_sequences' => 'Units & Sequences',
+    'settings.units_sequences_description' => 'This settings page is a placeholder. Define measurement units and document numbering sequences here (e.g., INV, PO, PI formats).',
+
+    /* =========================
+     * Translation Management
+     * ========================= */
+    'translations.translation_management' => 'Translation Management',
+    'translations.translation_stats' => 'Translation Stats',
+
+    /* =========================
+     * Notifications
+     * ========================= */
+    'notifications.notifications' => 'Notifications',
+    'notifications.notifications_description' => 'This is a placeholder for configuring system notifications and email/webhook integrations.',
+
+    /* =========================
+     * Integrations
+     * ========================= */
+    'integrations.integrations' => 'Integrations',
+    'integrations.integrations_description' => 'This is a placeholder for third-party integrations (e.g., accounting, CRM, payment gateways). Coming soon.',
 
     'common.all'               => 'All',
     'common.none'              => 'None',

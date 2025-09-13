@@ -1,6 +1,12 @@
 <?php 
 use function App\Core\base_url; 
 use function App\Core\csrf_field;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $item, $roles, $assigned */
 /** @var string $mode */
 $isEdit = $mode === 'edit';
@@ -12,10 +18,10 @@ $isEdit = $mode === 'edit';
         <div class="d-flex justify-content-between align-items-center">
           <h3 class="card-title mb-0">
             <i class="fas <?= $isEdit ? 'fa-edit' : 'fa-plus' ?>"></i>
-            <?= $isEdit ? 'Edit User' : 'Create New User' ?>
+            <?= $isEdit ? $t('users.edit_user') : $t('users.create_new_user') ?>
           </h3>
           <a href="<?= base_url('/users') ?>" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Users
+            <i class="fas fa-arrow-left"></i> <?= $t('users.back_to_users') ?>
           </a>
         </div>
       </div>
@@ -40,12 +46,12 @@ $isEdit = $mode === 'edit';
             <!-- Basic Information -->
             <div class="col-md-6">
               <h5 class="border-bottom pb-2 mb-3">
-                <i class="fas fa-user"></i> Basic Information
+                <i class="fas fa-user"></i> <?= $t('users.basic_information') ?>
               </h5>
               
               <div class="mb-3">
                 <label for="email" class="form-label">
-                  Email Address <span class="text-danger">*</span>
+                  <?= $t('common.email') ?> <span class="text-danger">*</span>
                 </label>
                 <input type="email" 
                        class="form-control" 

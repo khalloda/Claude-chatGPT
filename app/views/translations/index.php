@@ -4,18 +4,24 @@ use function App\Core\csrf_field;
 use function App\Core\user_has_permission;
 use function App\Core\get_locale;
 use function App\Core\is_rtl;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $translation_keys, $arabic_translations, $available_locales, $stats */
 /** @var string $page_title, $current_locale */
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><?= htmlspecialchars($page_title ?? 'Translation Management', ENT_QUOTES) ?></h2>
+  <h2><?= $h($page_title ?? $t('translations.translation_management')) ?></h2>
   <div class="btn-group">
     <a class="btn btn-outline-secondary" href="<?= base_url('/') ?>">
-      <i class="fas fa-arrow-left"></i> Back
+      <i class="fas fa-arrow-left"></i> <?= $t('common.back') ?>
     </a>
     <?php if (user_has_permission('settings.manage')): ?>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#translationStatsModal">
-      <i class="fas fa-chart-bar"></i> Translation Stats
+      <i class="fas fa-chart-bar"></i> <?= $t('translations.translation_stats') ?>
     </button>
     <?php endif; ?>
   </div>

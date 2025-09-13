@@ -1,25 +1,31 @@
 <?php 
 use function App\Core\base_url; 
 use function App\Core\user_has_permission;
+
+// Translation helper
+require_once __DIR__ . '/../../core/helpers.php';
+$t = fn($key) => \App\Core\t($key);
+$h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 /** @var array $rows, $statuses, $roles, $pagination */
 /** @var string $search, $status, $role, $page_title */
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2><?= htmlspecialchars($page_title ?? 'User Management', ENT_QUOTES) ?></h2>
+  <h2><?= $h($page_title ?? $t('users.user_management')) ?></h2>
   <div class="btn-group">
     <a class="btn btn-outline-secondary" href="<?= base_url('/') ?>">
-      <i class="fas fa-arrow-left"></i> Back
+      <i class="fas fa-arrow-left"></i> <?= $t('common.back') ?>
     </a>
     <?php if (user_has_permission('users.manage')): ?>
     <a class="btn btn-primary" href="<?= base_url('/users/create') ?>">
-      <i class="fas fa-plus"></i> Add User
+      <i class="fas fa-plus"></i> <?= $t('users.add_user') ?>
     </a>
     <?php endif; ?>
     <a class="btn btn-outline-primary" href="<?= base_url('/roles') ?>">
-      <i class="fas fa-user-shield"></i> Roles
+      <i class="fas fa-user-shield"></i> <?= $t('users.roles') ?>
     </a>
     <a class="btn btn-outline-primary" href="<?= base_url('/permissions') ?>">
-      <i class="fas fa-key"></i> Permissions
+      <i class="fas fa-key"></i> <?= $t('users.permissions') ?>
     </a>
   </div>
 </div>
@@ -29,15 +35,15 @@ use function App\Core\user_has_permission;
   <div class="card-body">
     <form method="get" action="<?= base_url('/users') ?>" class="row g-3">
       <div class="col-md-4">
-        <label for="search" class="form-label">Search</label>
+        <label for="search" class="form-label"><?= $t('common.search') ?></label>
         <input type="text" class="form-control" id="search" name="search" 
-               value="<?= htmlspecialchars($search ?? '', ENT_QUOTES) ?>" 
-               placeholder="Email or User ID">
+               value="<?= $h($search ?? '') ?>" 
+               placeholder="<?= $t('users.email_or_user_id') ?>">
       </div>
       <div class="col-md-3">
-        <label for="status" class="form-label">Status</label>
+        <label for="status" class="form-label"><?= $t('users.status') ?></label>
         <select class="form-select" id="status" name="status">
-          <option value="">All Statuses</option>
+          <option value=""><?= $t('users.all_statuses') ?></option>
           <?php foreach ($statuses ?? [] as $s): ?>
           <option value="<?= htmlspecialchars($s, ENT_QUOTES) ?>" 
                   <?= ($status ?? '') === $s ? 'selected' : '' ?>>
@@ -47,9 +53,9 @@ use function App\Core\user_has_permission;
         </select>
       </div>
       <div class="col-md-3">
-        <label for="role" class="form-label">Legacy Role</label>
+        <label for="role" class="form-label"><?= $t('users.legacy_role') ?></label>
         <select class="form-select" id="role" name="role">
-          <option value="">All Roles</option>
+          <option value=""><?= $t('users.all_roles') ?></option>
           <?php foreach ($roles ?? [] as $r): ?>
           <option value="<?= htmlspecialchars($r, ENT_QUOTES) ?>" 
                   <?= ($role ?? '') === $r ? 'selected' : '' ?>>
