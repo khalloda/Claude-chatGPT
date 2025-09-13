@@ -212,14 +212,6 @@ $render_group = function(array $group) use ($render_link, $is_active, $uid) {
 ?>
 <!-- Sidebar -->
 <aside class="sidebar" style="min-height:100vh;">
-  <div class="p-3 d-flex align-items-center gap-2 border-bottom">
-    <a href="<?= $u('/') ?>" class="d-inline-flex align-items-center text-decoration-none">
-      <img src="/assets/images/logo.png" alt="logo" height="32" class="me-2">
-      <span class="fw-semibold">MI Spare Parts</span>
-    </a>
-    <span class="ms-auto small text-muted"><?= htmlspecialchars(strtoupper($current_locale)) ?></span>
-  </div>
-
   <nav class="p-2">
     <ul class="nav nav-pills flex-column gap-1">
       <?php foreach ($menu as $item): ?>
