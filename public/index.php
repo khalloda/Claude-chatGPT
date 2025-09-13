@@ -334,6 +334,14 @@ $router->get('/integrations', 'integrationscontroller@index');
 $router->get('/import', 'importexportcontroller@index');
 $router->post('/import/export', 'importexportcontroller@export');
 
+// backups
+$router->get('/backups', 'backupscontroller@index');
+$router->post('/backups/create', 'backupscontroller@create');
+$router->get('/backups/download', 'backupscontroller@download');
+$router->post('/backups/restore', 'backupscontroller@restore');
+$router->post('/backups/delete', 'backupscontroller@delete');
+$router->post('/backups/cleanup', 'backupscontroller@cleanup');
+
 // roles & permissions
 $router->get('/roles', 'rolescontroller@index');
 $router->get('/roles/create', 'rolescontroller@create');

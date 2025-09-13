@@ -170,7 +170,7 @@ $menu = [
         'match' => ['/import','/backups','/audit','/health'],
         'items' => [
             ['icon'=>'ti ti-database-import','label'=>$T('nav.import_export','Import/Export'),'href'=>$u('/import'),  'match'=>'/import'],
-            ['icon'=>'ti ti-database','label'=>$T('nav.backups','Backups'),            'href'=>$u('/backups'), 'match'=>'/backups'],
+            ['icon'=>'ti ti-database-backup','label'=>$T('nav.backups','Backups'),'href'=>$u('/backups'),  'match'=>'/backups'],
             ['icon'=>'ti ti-list-details','label'=>$T('nav.audit_log','Audit Log'),      'href'=>$u('/audit'),   'match'=>'/audit'],
             ['icon'=>'ti ti-heartbeat','label'=>$T('nav.system_health','System Health'),     'href'=>$u('/health'),  'match'=>'/health'],
         ],
