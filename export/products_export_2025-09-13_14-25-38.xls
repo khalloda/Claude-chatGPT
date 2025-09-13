@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+<Title>Products Export</Title>
+<Author>MI Spare Parts System</Author>
+<Created>2025-09-13T14:25:38+03:00</Created>
+</DocumentProperties>
+<Styles>
+<Style ss:ID="Header">
+<Font ss:Bold="1"/>
+<Interior ss:Color="#E0E0E0" ss:Pattern="Solid"/>
+</Style>
+</Styles>
+<Worksheet ss:Name="products">
+<Table>
+<Row>
+<Cell ss:StyleID="Header"><Data ss:Type="String">id</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">code</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">name</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">cost</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">price</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">created_at</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">updated_at</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">category_id</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">category_name</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">make_id</Data></Cell>
+<Cell ss:StyleID="Header"><Data ss:Type="String">make_name</Data></Cell>
+</Row>
+<Row>
+<Cell><Data ss:Type="Number">2</Data></Cell>
+<Cell><Data ss:Type="String">PRD0002</Data></Cell>
+<Cell><Data ss:Type="String">Coil</Data></Cell>
+<Cell><Data ss:Type="Number">500.00</Data></Cell>
+<Cell><Data ss:Type="Number">650.00</Data></Cell>
+<Cell><Data ss:Type="String">2025-08-29 18:56:03</Data></Cell>
+<Cell><Data ss:Type="String"></Data></Cell>
+<Cell><Data ss:Type="Number">3</Data></Cell>
+<Cell><Data ss:Type="String">Electronics</Data></Cell>
+<Cell><Data ss:Type="Number">1</Data></Cell>
+<Cell><Data ss:Type="String">Fiat</Data></Cell>
+</Row>
+<Row>
+<Cell><Data ss:Type="Number">3</Data></Cell>
+<Cell><Data ss:Type="String">PRD0003</Data></Cell>
+<Cell><Data ss:Type="String">Red Polish</Data></Cell>
+<Cell><Data ss:Type="Number">850.00</Data></Cell>
+<Cell><Data ss:Type="Number">1050.00</Data></Cell>
+<Cell><Data ss:Type="String">2025-08-29 18:56:33</Data></Cell>
+<Cell><Data ss:Type="String"></Data></Cell>
+<Cell><Data ss:Type="Number">2</Data></Cell>
+<Cell><Data ss:Type="String">Paints</Data></Cell>
+<Cell><Data ss:Type="Number">1</Data></Cell>
+<Cell><Data ss:Type="String">Fiat</Data></Cell>
+</Row>
+<Row>
+<Cell><Data ss:Type="Number">4</Data></Cell>
+<Cell><Data ss:Type="String">PRD0004</Data></Cell>
+<Cell><Data ss:Type="String">Sparks Plug</Data></Cell>
+<Cell><Data ss:Type="Number">100.00</Data></Cell>
+<Cell><Data ss:Type="Number">150.00</Data></Cell>
+<Cell><Data ss:Type="String">2025-09-10 20:08:02</Data></Cell>
+<Cell><Data ss:Type="String">2025-09-11 11:04:15</Data></Cell>
+<Cell><Data ss:Type="Number">3</Data></Cell>
+<Cell><Data ss:Type="String">Electronics</Data></Cell>
+<Cell><Data ss:Type="Number">2</Data></Cell>
+<Cell><Data ss:Type="String">Toyota</Data></Cell>
+</Row>
+<Row>
+<Cell><Data ss:Type="Number">1</Data></Cell>
+<Cell><Data ss:Type="String">PRD0001</Data></Cell>
+<Cell><Data ss:Type="String">Spoiler</Data></Cell>
+<Cell><Data ss:Type="Number">1000.00</Data></Cell>
+<Cell><Data ss:Type="Number">1500.00</Data></Cell>
+<Cell><Data ss:Type="String">2025-08-29 18:28:48</Data></Cell>
+<Cell><Data ss:Type="String"></Data></Cell>
+<Cell><Data ss:Type="Number">1</Data></Cell>
+<Cell><Data ss:Type="String">Body Parts</Data></Cell>
+<Cell><Data ss:Type="Number">1</Data></Cell>
+<Cell><Data ss:Type="String">Fiat</Data></Cell>
+</Row>
+</Table>
+</Worksheet>
+</Workbook>

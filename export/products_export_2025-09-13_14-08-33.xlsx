@@ -1,0 +1,5 @@
+﻿id,code,name,cost,price,created_at,updated_at,category_id,category_name,make_id,make_name
+2,PRD0002,Coil,500.00,650.00,2025-08-29 18:56:03,,3,Electronics,1,Fiat
+3,PRD0003,Red Polish,850.00,1050.00,2025-08-29 18:56:33,,2,Paints,1,Fiat
+4,PRD0004,Sparks Plug,100.00,150.00,2025-09-10 20:08:02,2025-09-11 11:04:15,3,Electronics,2,Toyota
+1,PRD0001,Spoiler,1000.00,1500.00,2025-08-29 18:28:48,,1,Body Parts,1,Fiat

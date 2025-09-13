@@ -1,0 +1,88 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Excel.Sheet">
+<meta name="Generator" content="MI Spare Parts System">
+<!--[if gte mso 9]><xml>
+<x:ExcelWorkbook>
+<x:ExcelWorksheets>
+<x:ExcelWorksheet>
+<x:Name>products</x:Name>
+<x:WorksheetOptions>
+<x:DefaultRowHeight>285</x:DefaultRowHeight>
+</x:WorksheetOptions>
+</x:ExcelWorksheet>
+</x:ExcelWorksheets>
+</x:ExcelWorkbook>
+</xml><![endif]-->
+</head>
+<body>
+<table border="1" cellpadding="0" cellspacing="0">
+<tr style="background-color:#E0E0E0; font-weight:bold;">
+<td>id</td>
+<td>code</td>
+<td>name</td>
+<td>cost</td>
+<td>price</td>
+<td>created_at</td>
+<td>updated_at</td>
+<td>category_id</td>
+<td>category_name</td>
+<td>make_id</td>
+<td>make_name</td>
+</tr>
+<tr>
+<td>2</td>
+<td>PRD0002</td>
+<td>Coil</td>
+<td>500.00</td>
+<td>650.00</td>
+<td>2025-08-29 18:56:03</td>
+<td></td>
+<td>3</td>
+<td>Electronics</td>
+<td>1</td>
+<td>Fiat</td>
+</tr>
+<tr>
+<td>3</td>
+<td>PRD0003</td>
+<td>Red Polish</td>
+<td>850.00</td>
+<td>1050.00</td>
+<td>2025-08-29 18:56:33</td>
+<td></td>
+<td>2</td>
+<td>Paints</td>
+<td>1</td>
+<td>Fiat</td>
+</tr>
+<tr>
+<td>4</td>
+<td>PRD0004</td>
+<td>Sparks Plug</td>
+<td>100.00</td>
+<td>150.00</td>
+<td>2025-09-10 20:08:02</td>
+<td>2025-09-11 11:04:15</td>
+<td>3</td>
+<td>Electronics</td>
+<td>2</td>
+<td>Toyota</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PRD0001</td>
+<td>Spoiler</td>
+<td>1000.00</td>
+<td>1500.00</td>
+<td>2025-08-29 18:28:48</td>
+<td></td>
+<td>1</td>
+<td>Body Parts</td>
+<td>1</td>
+<td>Fiat</td>
+</tr>
+</table>
+</body>
+</html>

@@ -330,6 +330,10 @@ $router->post('/notifications/mark-read', 'notificationscontroller@markAsRead');
 $router->get('/notifications/templates', 'notificationscontroller@templates');
 $router->get('/integrations', 'integrationscontroller@index');
 
+// import & export
+$router->get('/import', 'importexportcontroller@index');
+$router->post('/import/export', 'importexportcontroller@export');
+
 // roles & permissions
 $router->get('/roles', 'rolescontroller@index');
 $router->get('/roles/create', 'rolescontroller@create');

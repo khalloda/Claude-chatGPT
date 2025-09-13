@@ -3,7 +3,7 @@
 ## Executive Summary
 
 - Purpose: Spare parts sales, purchasing, inventory, and billing system with quotes, orders, invoices, returns, stock movements, payments, notes, and reporting.
-- Key features: Product/master data management, quotes→orders→invoices flow, AP/AR payments, inventory ledger, multi‑warehouse stocks, receipts (GRN), stock transfers/adjustments, audit activity log, Arabic/English UI strings, Redis‑backed sessions and caching, request/error/database performance logging.
+- Key features: Product/master data management, quotes→orders→invoices flow, AP/AR payments, inventory ledger, multi‑warehouse stocks, receipts (GRN), stock transfers/adjustments, audit activity log, Arabic/English UI strings, Redis‑backed sessions and caching, request/error/database performance logging, professional data export system (PDF/Excel/CSV), interactive dashboard with real-time charts, comprehensive notifications system, role-based access control (RBAC).
 - Audiences: Developers, DBAs, ops/SRE, QA, security auditors, support.
 - Business goals: Accurate inventory and financial tracking, fast product/search, reliable documents/numbering, low‑friction operations, secure multi‑user access.
 
@@ -197,6 +197,10 @@ Key tables with columns, constraints, and notable indexes:
 - currencies: id PK; code varchar(3) UNIQUE; name varchar(100); symbol varchar(10); exchange_rate decimal(12,6) dflt 1.0; decimal_places tinyint dflt 2; is_base bool dflt 0; is_active bool dflt 1; created_at, updated_at. Indexes: idx_currencies_base, idx_currencies_active.
 - exchange_rate_history: id PK; currency_id uint FK->currencies.id CASCADE; old_rate decimal(12,6); new_rate decimal(12,6); changed_by uint; changed_at datetime dflt now; source varchar(50). Indexes: idx_exchange_history_currency, idx_exchange_history_date.
 
+**🎉 NEW: Notifications & Export System Tables (September 2025):**
+- notifications: id PK; title varchar(255); message text; type enum('info','warning','error','success') dflt 'info'; user_id uint FK->users.id; is_read bool dflt 0; created_by uint FK->users.id; created_at, updated_at. Indexes: idx_notifications_user, idx_notifications_read.
+- notification_templates: id PK; name varchar(100) UNIQUE; subject varchar(255); body text; variables json; is_active bool dflt 1; created_at, updated_at. Index: idx_notification_templates_active.
+
 Notable FK gaps in live schema:
 
 - Many logical relationships lack declared FKs (e.g., invoices.customer_id, purchase_* foreign keys). Application likely enforces integrity at code level.
@@ -287,6 +291,17 @@ Routing in `public/index.php` via custom `Router`. Typical pattern: `METHOD /pat
 - Currency Management: GET `/settings/currencies`, POST `/settings/currencies/create`, POST `/settings/currencies/update`
 - Settings Updates: POST `/settings/tax-currency/update`
 
+**🎉 NEW: Import/Export System Routes (September 2025):**
+- Import/Export Hub: GET `/import` (export interface with module and format selection)
+- Data Export: POST `/import/export` (exports data in PDF, CSV, XLS, XLSX formats)
+- Supported Modules: Products, Categories, Makes, Models, Customers, Suppliers, Invoices, Purchase Orders, etc.
+- Export Types: Bulk (all data), Module (specific module), Custom (user-defined)
+
+**🎉 NEW: Notifications System Routes (September 2025):**
+- Notifications: GET `/notifications` (list), GET `/notifications/create`, POST `/notifications`, GET `/notifications/edit`, POST `/notifications/update`, POST `/notifications/delete`
+- Notification Actions: POST `/notifications/mark-read`, GET `/notifications/templates`
+- User Integration: Proper user relationships and created_by tracking
+
 **Inventory & Reporting:**
 - Reports: `/reports/{ap-aging|ar-aging|inventory-valuation}`
 - Transfers/Adjustments: stock transfer and adjustment flows with printables
@@ -374,6 +389,35 @@ Tables touched by major controllers/models:
 - Add CI for lint/tests and a migration pipeline; include dry‑run/explain plans.
 - Document and automate DB migration order and safety checks.
 
+
+## Recent Updates (2025-09-13)
+
+### Import/Export System Implementation
+- **Professional Export System**: Complete data export functionality supporting PDF, CSV, XLS, and XLSX formats
+- **TCPDF Integration**: Downloaded and integrated TCPDF library for professional PDF generation with headers, footers, and styling
+- **Excel Compatibility**: Implemented HTML format for XLSX and enhanced XML format for XLS files that open correctly in Excel
+- **Data Safety**: Fixed `strpos()` errors with mixed data types by implementing proper string conversion
+- **Dynamic Database Detection**: Robust table and column existence checking for flexible data export
+- **Export Interface**: User-friendly interface at `/import` with module selection and format options
+- **File Management**: All exports saved to `/export/` directory with proper headers and metadata
+
+### Dashboard Activity Enhancement
+- **Real Data Integration**: Replaced placeholder dashboard with actual sales and purchase data
+- **Chart.js Implementation**: Interactive line charts for sales vs purchases visualization
+- **Top Products Analysis**: Quantity-based product ranking with limited display (3 items)
+- **Activity Summary**: Today's quotes, orders, invoices, and purchases counts
+- **Fixed Layout**: Optimized chart sizing to prevent screen overflow with CSS classes
+
+### Notifications System Activation
+- **Complete CRUD Operations**: Full notification management with database integration
+- **User Integration**: Proper user relationships and created_by tracking
+- **Template System**: Notification template management for reusable notifications
+- **Permission Control**: Integrated with existing RBAC system
+- **Database Tables**: Created `notifications` and `notification_templates` tables
+
+### Sidebar Optimization
+- **Header Removal**: Removed redundant sidebar header as it duplicated main page header
+- **Cleaner Interface**: Streamlined navigation with less visual clutter
 
 ## Recent Updates (2025-09-10)
 
