@@ -16,7 +16,7 @@ final class NotificationsController extends Controller
     public function index(): void
     {
         require_auth();
-        require_permission('notifications.view');
+        require_permission('users.view');
         
         $notifications = Notification::all();
         $stats = Notification::getStats();
@@ -33,7 +33,7 @@ final class NotificationsController extends Controller
     public function create(): void
     {
         require_auth();
-        require_permission('notifications.create');
+        require_permission('users.manage');
         
         $types = Notification::getTypes();
         $channels = Notification::getChannels();
@@ -53,7 +53,7 @@ final class NotificationsController extends Controller
     public function store(): void
     {
         require_auth();
-        require_permission('notifications.create');
+        require_permission('users.manage');
         
         if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
@@ -69,7 +69,7 @@ final class NotificationsController extends Controller
                 'target_type' => $_POST['target_type'] ?? 'all',
                 'target_id' => !empty($_POST['target_id']) ? (int)$_POST['target_id'] : null,
                 'scheduled_at' => !empty($_POST['scheduled_at']) ? $_POST['scheduled_at'] : null,
-                'created_by' => $_SESSION['user_id']
+                'created_by' => (int)($_SESSION['user']['id'] ?? 0)
             ];
             
             // Validation
@@ -79,6 +79,10 @@ final class NotificationsController extends Controller
             
             if (empty($data['message'])) {
                 throw new \InvalidArgumentException('Message is required.');
+            }
+            
+            if ($data['created_by'] <= 0) {
+                throw new \InvalidArgumentException('Invalid user session.');
             }
             
             $id = Notification::create($data);
@@ -95,7 +99,7 @@ final class NotificationsController extends Controller
     public function edit(): void
     {
         require_auth();
-        require_permission('notifications.edit');
+        require_permission('users.manage');
         
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) {
@@ -130,7 +134,7 @@ final class NotificationsController extends Controller
     public function update(): void
     {
         require_auth();
-        require_permission('notifications.edit');
+        require_permission('users.manage');
         
         if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
@@ -180,7 +184,7 @@ final class NotificationsController extends Controller
     public function delete(): void
     {
         require_auth();
-        require_permission('notifications.delete');
+        require_permission('users.manage');
         
         if (!verify_csrf_request()) {
             flash_set('error', 'Invalid session token.');
@@ -210,7 +214,7 @@ final class NotificationsController extends Controller
     public function markAsRead(): void
     {
         require_auth();
-        require_permission('notifications.view');
+        require_permission('users.view');
         
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) {
@@ -235,7 +239,7 @@ final class NotificationsController extends Controller
     public function templates(): void
     {
         require_auth();
-        require_permission('notifications.manage_templates');
+        require_permission('users.manage');
         
         $templates = NotificationTemplate::all();
         

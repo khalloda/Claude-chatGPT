@@ -171,7 +171,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                                                     </a>
                                                     <?php if (!$notification['is_read']): ?>
                                                         <form method="POST" action="<?= base_url('/notifications/mark-read') ?>" style="display: inline;">
-                                                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                                            <?= \App\Core\csrf_field() ?>
                                                             <input type="hidden" name="id" value="<?= $h($notification['id']) ?>">
                                                             <button type="submit" class="btn btn-outline-success" title="<?= $t('notifications.mark_as_read') ?>">
                                                                 <i class="fas fa-check"></i>
@@ -179,7 +179,7 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                                                         </form>
                                                     <?php endif; ?>
                                                     <form method="POST" action="<?= base_url('/notifications/delete') ?>" style="display: inline;">
-                                                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                                        <?= \App\Core\csrf_field() ?>
                                                         <input type="hidden" name="id" value="<?= $h($notification['id']) ?>">
                                                         <button type="submit" class="btn btn-outline-danger" 
                                                                 onclick="return confirm('<?= $t('notifications.confirm_delete') ?>')" 

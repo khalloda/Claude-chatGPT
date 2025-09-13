@@ -38,8 +38,8 @@ $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="<?= base_url('/notifications/' . ($notification ? 'update' : 'store')) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                    <form method="POST" action="<?= base_url($notification ? '/notifications/update' : '/notifications') ?>">
+                        <?= \App\Core\csrf_field() ?>
                         <?php if ($notification): ?>
                             <input type="hidden" name="id" value="<?= $h($notification['id']) ?>">
                         <?php endif; ?>

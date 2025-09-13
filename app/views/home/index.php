@@ -82,7 +82,7 @@ $db_error = $db_error ?? '';
 </section>
 
 <div class="row g-3 mt-2">
-  <!-- Left: Trends / Activity placeholder -->
+  <!-- Left: Trends / Activity -->
   <div class="col-12 col-xl-8">
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between">
@@ -90,12 +90,62 @@ $db_error = $db_error ?? '';
         <div class="text-muted small"><?= $t('dashboard.last_30_days') ?></div>
       </div>
       <div class="card-body">
-        <p class="text-muted mb-2">
-          <?= $t('dashboard.charts_placeholder') ?>
-        </p>
-        <div class="empty">
-          <i class="ti ti-chart-bar"></i>
-          <div class="mt-2"><?= $t('dashboard.connect_metrics') ?></div>
+        <!-- Sales vs Purchases Chart -->
+        <div class="mb-3">
+          <h6 class="mb-2"><?= $t('dashboard.sales_vs_purchases') ?></h6>
+          <div class="activity-chart-container">
+            <canvas id="salesPurchasesChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Top Products -->
+        <?php if (!empty($activityData['top_products'])): ?>
+        <div class="mb-3">
+          <h6 class="mb-2"><?= $t('dashboard.top_products') ?></h6>
+          <div class="row">
+            <?php foreach (array_slice($activityData['top_products'], 0, 3) as $index => $product): ?>
+            <div class="col-12 col-md-4 mb-2">
+              <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                <div>
+                  <div class="fw-semibold small"><?= $h($product['name']) ?></div>
+                  <div class="text-muted" style="font-size: 0.75rem;"><?= $h((int)$product['total_qty']) ?> <?= $t('dashboard.units') ?></div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-semibold text-primary small"><?= $h(number_format((float)$product['total_value'], 2)) ?></div>
+                </div>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Today's Activity Summary -->
+        <div class="row">
+          <div class="col-6 col-md-3">
+            <div class="text-center p-1 bg-primary bg-opacity-10 rounded">
+              <div class="fw-bold text-primary small"><?= $h($activityData['recent_activity']['quotes_today']) ?></div>
+              <div class="text-muted" style="font-size: 0.7rem;"><?= $t('dashboard.quotes_today') ?></div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="text-center p-1 bg-success bg-opacity-10 rounded">
+              <div class="fw-bold text-success small"><?= $h($activityData['recent_activity']['orders_today']) ?></div>
+              <div class="text-muted" style="font-size: 0.7rem;"><?= $t('dashboard.orders_today') ?></div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="text-center p-1 bg-info bg-opacity-10 rounded">
+              <div class="fw-bold text-info small"><?= $h($activityData['recent_activity']['invoices_today']) ?></div>
+              <div class="text-muted" style="font-size: 0.7rem;"><?= $t('dashboard.invoices_today') ?></div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="text-center p-1 bg-warning bg-opacity-10 rounded">
+              <div class="fw-bold text-warning small"><?= $h($activityData['recent_activity']['purchases_today']) ?></div>
+              <div class="text-muted" style="font-size: 0.7rem;"><?= $t('dashboard.purchases_today') ?></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -157,3 +207,94 @@ $db_error = $db_error ?? '';
     </p>
   </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+#salesPurchasesChart {
+    max-height: 200px !important;
+}
+.activity-chart-container {
+    height: 200px;
+    position: relative;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales vs Purchases Chart
+    const ctx = document.getElementById('salesPurchasesChart').getContext('2d');
+    const salesPurchasesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($activityData['dates']) ?>,
+            datasets: [{
+                label: '<?= $t('dashboard.sales') ?>',
+                data: <?= json_encode($activityData['sales']) ?>,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true
+            }, {
+                label: '<?= $t('dashboard.purchases') ?>',
+                data: <?= json_encode($activityData['purchases']) ?>,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'USD'
+                            }).format(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: '<?= $t('dashboard.date') ?>'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: '<?= $t('dashboard.amount') ?>'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'USD',
+                                minimumFractionDigits: 0
+                            }).format(value);
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+});
+</script>
