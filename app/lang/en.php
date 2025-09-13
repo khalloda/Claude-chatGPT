@@ -964,6 +964,110 @@ return [
      * ========================= */
     'notifications.notifications' => 'Notifications',
     'notifications.notifications_description' => 'This is a placeholder for configuring system notifications and email/webhook integrations.',
+    'notifications.manage_system_notifications' => 'Manage system notifications and alerts',
+    'notifications.create_notification' => 'Create Notification',
+    'notifications.edit_notification' => 'Edit Notification',
+    'notifications.create_notification_description' => 'Create a new system notification',
+    'notifications.edit_notification_description' => 'Edit an existing system notification',
+    'notifications.templates' => 'Templates',
+    'notifications.notification_templates' => 'Notification Templates',
+    'notifications.manage_notification_templates' => 'Manage notification templates and presets',
+    
+    // Statistics
+    'notifications.total_notifications' => 'Total Notifications',
+    'notifications.unread_notifications' => 'Unread Notifications',
+    'notifications.active_notifications' => 'Active Notifications',
+    'notifications.scheduled_notifications' => 'Scheduled Notifications',
+    
+    // Table headers
+    'notifications.all_notifications' => 'All Notifications',
+    'notifications.title' => 'Title',
+    'notifications.type' => 'Type',
+    'notifications.channel' => 'Channel',
+    'notifications.target' => 'Target',
+    'notifications.status' => 'Status',
+    'notifications.created_by' => 'Created By',
+    'notifications.created_at' => 'Created At',
+    
+    // Status badges
+    'notifications.unread' => 'Unread',
+    'notifications.active' => 'Active',
+    'notifications.inactive' => 'Inactive',
+    'notifications.all_users' => 'All Users',
+    
+    // Notification types
+    'notifications.type_info' => 'Information',
+    'notifications.type_success' => 'Success',
+    'notifications.type_warning' => 'Warning',
+    'notifications.type_error' => 'Error',
+    
+    // Channels
+    'notifications.channel_in_app' => 'In-App',
+    'notifications.channel_email' => 'Email',
+    'notifications.channel_sms' => 'SMS',
+    'notifications.channel_webhook' => 'Webhook',
+    
+    // Target types
+    'notifications.target_type_user' => 'User',
+    'notifications.target_type_role' => 'Role',
+    'notifications.target_type_group' => 'Group',
+    
+    // Actions
+    'notifications.mark_as_read' => 'Mark as Read',
+    'notifications.confirm_delete' => 'Are you sure you want to delete this notification?',
+    
+    // Empty states
+    'notifications.no_notifications' => 'No Notifications',
+    'notifications.no_notifications_description' => 'No notifications have been created yet.',
+    'notifications.create_first_notification' => 'Create First Notification',
+    
+    // Form fields
+    'notifications.title_placeholder' => 'Enter notification title',
+    'notifications.message' => 'Message',
+    'notifications.message_placeholder' => 'Enter notification message',
+    'notifications.select_type' => 'Select Type',
+    'notifications.select_channel' => 'Select Channel',
+    'notifications.select_target_type' => 'Select Target Type',
+    'notifications.target_type' => 'Target Type',
+    'notifications.target_user' => 'Target User',
+    'notifications.select_user' => 'Select User',
+    'notifications.scheduled_at' => 'Scheduled At',
+    'notifications.scheduled_at_help' => 'Leave empty to send immediately',
+    'notifications.is_active' => 'Active',
+    
+    // Help section
+    'notifications.help' => 'Help',
+    'notifications.notification_types' => 'Notification Types',
+    'notifications.type_info_description' => 'General information messages',
+    'notifications.type_success_description' => 'Success and confirmation messages',
+    'notifications.type_warning_description' => 'Warning and caution messages',
+    'notifications.type_error_description' => 'Error and failure messages',
+    'notifications.channels' => 'Channels',
+    'notifications.channel_in_app_description' => 'Displayed within the application',
+    'notifications.channel_email_description' => 'Sent via email',
+    'notifications.channel_sms_description' => 'Sent via SMS',
+    'notifications.channel_webhook_description' => 'Sent via webhook',
+    'notifications.targeting' => 'Targeting',
+    'notifications.target_all_description' => 'Send to all users',
+    'notifications.target_user_description' => 'Send to a specific user',
+    'notifications.target_role_description' => 'Send to users with specific role',
+    'notifications.target_group_description' => 'Send to users in specific group',
+    
+    // Templates
+    'notifications.no_templates' => 'No Templates',
+    'notifications.no_templates_description' => 'No notification templates are available.',
+    'notifications.title_template' => 'Title Template',
+    'notifications.message_template' => 'Message Template',
+    'notifications.available_variables' => 'Available Variables',
+    'notifications.created' => 'Created',
+    'notifications.use_template' => 'Use Template',
+    'notifications.preview' => 'Preview',
+    'notifications.template_preview' => 'Template Preview',
+    'notifications.template_preview_note' => 'Template Preview',
+    'notifications.template_preview_description' => 'This is a preview of how the template will look with sample data.',
+    'notifications.preview_title' => 'Preview Title',
+    'notifications.preview_message' => 'Preview Message',
+    'notifications.use_this_template' => 'Use This Template',
 
     /* =========================
      * Integrations

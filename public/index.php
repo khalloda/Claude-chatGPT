@@ -321,6 +321,13 @@ $router->get('/settings/units-sequences', 'settingscontroller@unitssequences');
 $router->get('/translations', 'translationscontroller@index');
 $router->get('/locale', 'translationscontroller@switchLocale');
 $router->get('/notifications', 'notificationscontroller@index');
+$router->get('/notifications/create', 'notificationscontroller@create');
+$router->post('/notifications', 'notificationscontroller@store');
+$router->get('/notifications/edit', 'notificationscontroller@edit');
+$router->post('/notifications/update', 'notificationscontroller@update');
+$router->post('/notifications/delete', 'notificationscontroller@delete');
+$router->post('/notifications/mark-read', 'notificationscontroller@markAsRead');
+$router->get('/notifications/templates', 'notificationscontroller@templates');
 $router->get('/integrations', 'integrationscontroller@index');
 
 // roles & permissions

@@ -963,6 +963,110 @@ return [
      * ========================= */
     'notifications.notifications' => 'الإشعارات',
     'notifications.notifications_description' => 'هذا مؤقت لتكوين إشعارات النظام وتكاملات البريد الإلكتروني/webhook.',
+    'notifications.manage_system_notifications' => 'إدارة إشعارات وتنبيهات النظام',
+    'notifications.create_notification' => 'إنشاء إشعار',
+    'notifications.edit_notification' => 'تعديل الإشعار',
+    'notifications.create_notification_description' => 'إنشاء إشعار نظام جديد',
+    'notifications.edit_notification_description' => 'تعديل إشعار نظام موجود',
+    'notifications.templates' => 'القوالب',
+    'notifications.notification_templates' => 'قوالب الإشعارات',
+    'notifications.manage_notification_templates' => 'إدارة قوالب الإشعارات والإعدادات المسبقة',
+    
+    // Statistics
+    'notifications.total_notifications' => 'إجمالي الإشعارات',
+    'notifications.unread_notifications' => 'الإشعارات غير المقروءة',
+    'notifications.active_notifications' => 'الإشعارات النشطة',
+    'notifications.scheduled_notifications' => 'الإشعارات المجدولة',
+    
+    // Table headers
+    'notifications.all_notifications' => 'جميع الإشعارات',
+    'notifications.title' => 'العنوان',
+    'notifications.type' => 'النوع',
+    'notifications.channel' => 'القناة',
+    'notifications.target' => 'الهدف',
+    'notifications.status' => 'الحالة',
+    'notifications.created_by' => 'أنشأ بواسطة',
+    'notifications.created_at' => 'تاريخ الإنشاء',
+    
+    // Status badges
+    'notifications.unread' => 'غير مقروء',
+    'notifications.active' => 'نشط',
+    'notifications.inactive' => 'غير نشط',
+    'notifications.all_users' => 'جميع المستخدمين',
+    
+    // Notification types
+    'notifications.type_info' => 'معلومات',
+    'notifications.type_success' => 'نجح',
+    'notifications.type_warning' => 'تحذير',
+    'notifications.type_error' => 'خطأ',
+    
+    // Channels
+    'notifications.channel_in_app' => 'داخل التطبيق',
+    'notifications.channel_email' => 'البريد الإلكتروني',
+    'notifications.channel_sms' => 'رسالة نصية',
+    'notifications.channel_webhook' => 'Webhook',
+    
+    // Target types
+    'notifications.target_type_user' => 'مستخدم',
+    'notifications.target_type_role' => 'دور',
+    'notifications.target_type_group' => 'مجموعة',
+    
+    // Actions
+    'notifications.mark_as_read' => 'تعيين كمقروء',
+    'notifications.confirm_delete' => 'هل أنت متأكد من حذف هذا الإشعار؟',
+    
+    // Empty states
+    'notifications.no_notifications' => 'لا توجد إشعارات',
+    'notifications.no_notifications_description' => 'لم يتم إنشاء أي إشعارات بعد.',
+    'notifications.create_first_notification' => 'إنشاء أول إشعار',
+    
+    // Form fields
+    'notifications.title_placeholder' => 'أدخل عنوان الإشعار',
+    'notifications.message' => 'الرسالة',
+    'notifications.message_placeholder' => 'أدخل رسالة الإشعار',
+    'notifications.select_type' => 'اختر النوع',
+    'notifications.select_channel' => 'اختر القناة',
+    'notifications.select_target_type' => 'اختر نوع الهدف',
+    'notifications.target_type' => 'نوع الهدف',
+    'notifications.target_user' => 'المستخدم المستهدف',
+    'notifications.select_user' => 'اختر المستخدم',
+    'notifications.scheduled_at' => 'مجدول في',
+    'notifications.scheduled_at_help' => 'اترك فارغاً للإرسال فوراً',
+    'notifications.is_active' => 'نشط',
+    
+    // Help section
+    'notifications.help' => 'المساعدة',
+    'notifications.notification_types' => 'أنواع الإشعارات',
+    'notifications.type_info_description' => 'رسائل المعلومات العامة',
+    'notifications.type_success_description' => 'رسائل النجاح والتأكيد',
+    'notifications.type_warning_description' => 'رسائل التحذير والحذر',
+    'notifications.type_error_description' => 'رسائل الخطأ والفشل',
+    'notifications.channels' => 'القنوات',
+    'notifications.channel_in_app_description' => 'معروضة داخل التطبيق',
+    'notifications.channel_email_description' => 'مرسلة عبر البريد الإلكتروني',
+    'notifications.channel_sms_description' => 'مرسلة عبر الرسائل النصية',
+    'notifications.channel_webhook_description' => 'مرسلة عبر webhook',
+    'notifications.targeting' => 'التوجيه',
+    'notifications.target_all_description' => 'إرسال لجميع المستخدمين',
+    'notifications.target_user_description' => 'إرسال لمستخدم محدد',
+    'notifications.target_role_description' => 'إرسال للمستخدمين بدور محدد',
+    'notifications.target_group_description' => 'إرسال للمستخدمين في مجموعة محددة',
+    
+    // Templates
+    'notifications.no_templates' => 'لا توجد قوالب',
+    'notifications.no_templates_description' => 'لا توجد قوالب إشعارات متاحة.',
+    'notifications.title_template' => 'قالب العنوان',
+    'notifications.message_template' => 'قالب الرسالة',
+    'notifications.available_variables' => 'المتغيرات المتاحة',
+    'notifications.created' => 'تم الإنشاء',
+    'notifications.use_template' => 'استخدام القالب',
+    'notifications.preview' => 'معاينة',
+    'notifications.template_preview' => 'معاينة القالب',
+    'notifications.template_preview_note' => 'معاينة القالب',
+    'notifications.template_preview_description' => 'هذه معاينة لكيفية ظهور القالب مع بيانات تجريبية.',
+    'notifications.preview_title' => 'معاينة العنوان',
+    'notifications.preview_message' => 'معاينة الرسالة',
+    'notifications.use_this_template' => 'استخدام هذا القالب',
 
     /* =========================
      * Integrations
